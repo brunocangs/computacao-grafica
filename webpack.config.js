@@ -5,10 +5,11 @@ module.exports = {
   entry: path.join(__dirname, 'index.ts'),
   watch: true,
   plugins: [new Html({
-    title: 'Computação Gráfica'
+    title: 'Computação Gráfica',
+    template: 'index.html'
   })],
   output: {
-    path: __dirname + 'dist',
+    path: __dirname + '/dist',
     publicPath: '/',
     filename: "bundle.js",
     chunkFilename: '[name].js'
@@ -25,8 +26,7 @@ module.exports = {
   },
   devtool: 'source-map',
   devServer: {
-    contentBase: path.join('/'),
-    inline: true,
+    contentBase: path.join('/dist'),
     hot: true,
     port: 3000,
   }
