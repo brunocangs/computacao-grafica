@@ -3,7 +3,6 @@ const Html = require('html-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: path.join(__dirname, 'src', 'index.ts'),
-  watch: true,
   plugins: [new Html({
     title: 'Computação Gráfica',
     template: 'index.html'
