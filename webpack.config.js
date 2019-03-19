@@ -2,7 +2,7 @@ const path = require('path');
 const Html = require('html-webpack-plugin');
 module.exports = {
   mode: 'development',
-  entry: path.join(__dirname, 'index.ts'),
+  entry: path.join(__dirname, 'src', 'index.ts'),
   watch: true,
   plugins: [new Html({
     title: 'Computação Gráfica',
@@ -11,7 +11,7 @@ module.exports = {
   output: {
     path: __dirname + '/dist',
     publicPath: '/',
-    filename: "bundle.js",
+    filename: 'bundle.js',
     chunkFilename: '[name].js'
   },
   module: {
