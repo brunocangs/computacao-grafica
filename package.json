@@ -3,11 +3,12 @@
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
+  "homepage": "https://brunocangs.github.io/computacao-grafica",
   "scripts": {
     "start": "webpack-dev-server --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rm -rf dist && webpack",
-    "deploy": "npm run build && gh-pages -b master -d dist"
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "keywords": [],
   "author": "Bruno Cangussu",

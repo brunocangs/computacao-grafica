@@ -9,7 +9,7 @@ module.exports = {
   })],
   output: {
     path: __dirname + '/dist',
-    publicPath: '/',
+    publicPath: '/computacao-grafica',
     filename: 'bundle.js',
     chunkFilename: '[name].js'
   },
