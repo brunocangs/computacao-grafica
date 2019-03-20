@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {axes, cube} from "./utils";
+import {axes, cube} from "../utils";
 
 const width = window.innerWidth;
 const height = window.innerHeight;

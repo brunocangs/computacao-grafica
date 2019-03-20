@@ -1,17 +1,29 @@
 const path = require('path');
 const Html = require('html-webpack-plugin');
+const fs = require('fs');
+
+const exercisesDir = path.resolve(__dirname, 'src', 'exercises');
+const exercises = fs.readdirSync(exercisesDir);
+
 module.exports = {
   mode: 'development',
-  entry: path.join(__dirname, 'src', 'index.ts'),
-  plugins: [new Html({
-    title: 'Computação Gráfica',
-    template: 'index.html'
-  })],
+  entry: exercises.reduce((prev, curr) => {
+    prev[curr.split('.')[0]] = require.resolve(path.resolve(exercisesDir, curr));
+    return prev;
+  }, {}),
+  plugins: exercises.map(exercise => {
+    const filename = exercise.split('.')[0];
+    return new Html({
+      title: 'Computação Gráfica',
+      template: 'index.html',
+      chunks: [filename],
+      filename: `${filename}.html`
+    });
+  }),
   output: {
     path: __dirname + '/dist',
-    publicPath: '/computacao-grafica',
-    filename: 'bundle.js',
-    chunkFilename: '[name].js'
+    publicPath: process.env.NODE_ENV === 'development' ? '/' : '/computacao-grafica',
+    filename: '[name].bundle.js',
   },
   module: {
     rules: [{
@@ -23,7 +35,7 @@ module.exports = {
   resolve: {
     extensions: ['.json', '.ts', '.js']
   },
-  devtool: 'source-map',
+  devtool: process.env.NODE_ENV === 'development' ? 'source-map' : '',
   devServer: {
     contentBase: path.join('/dist'),
     hot: true,
