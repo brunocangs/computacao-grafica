@@ -1,4 +1,18 @@
 import * as THREE from "three";
+import {
+  Shape,
+  Vector2,
+  ShapeGeometry,
+  MeshBasicMaterial,
+  Mesh,
+  Geometry,
+  Vector3,
+  LineBasicMaterial,
+  Line
+} from "three";
+
+type PointArray2D = [number, number][];
+type PointArray3D = [number, number, number][];
 
 const width = window.innerWidth;
 const height = window.innerHeight;
@@ -17,14 +31,47 @@ export const axes = () => {
   return line;
 };
 
-export const cube = (size: number, color: string | number | THREE.Color) => {
-  var cube = new THREE.BoxBufferGeometry(size, size, size);
-  cube.translate(10, 10, 0);
-  let mesh = new THREE.Mesh(
-    cube,
-    new THREE.MeshBasicMaterial({
-      color
-    })
+export const square = (
+  x0: number,
+  y0: number,
+  size: number,
+  params: THREE.MeshBasicMaterialParameters
+) => {
+  return shape(
+    [[x0, y0], [x0 + size, y0], [x0 + size, y0 + size], [x0, y0 + size]],
+    params
   );
-  return mesh;
+};
+
+export const shape = (
+  points: PointArray2D,
+  params: THREE.MeshBasicMaterialParameters
+) => {
+  const shape = new Shape(points.map(item => new Vector2(...item)));
+  const geo = new ShapeGeometry(shape);
+  const mat = new MeshBasicMaterial(params);
+  const plane = new Mesh(geo, mat);
+  return plane;
+};
+
+export const line2D = (
+  points: PointArray2D,
+  params: THREE.LineBasicMaterialParameters
+) => {
+  const geo = new Geometry();
+  geo.vertices.push(...points.map(point => new Vector3(...point, 0)));
+  const mat = new LineBasicMaterial(params);
+  const line = new Line(geo, mat);
+  return line;
+};
+
+export const line3D = (
+  points: PointArray3D,
+  params: THREE.LineBasicMaterialParameters
+) => {
+  const geo = new Geometry();
+  geo.vertices.push(...points.map(point => new Vector3(...point)));
+  const mat = new LineBasicMaterial(params);
+  const line = new Line(geo, mat);
+  return line;
 };
