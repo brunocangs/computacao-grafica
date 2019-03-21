@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/index.ts");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/arm.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -48449,10 +48449,10 @@ function LensFlare() {
 
 /***/ }),
 
-/***/ "./src/exercises/index.ts":
-/*!********************************!*\
-  !*** ./src/exercises/index.ts ***!
-  \********************************/
+/***/ "./src/exercises/arm.ts":
+/*!******************************!*\
+  !*** ./src/exercises/arm.ts ***!
+  \******************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -48460,13 +48460,31 @@ function LensFlare() {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var utils_1 = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
-var _a = utils_1.init(), scene = _a[0], renderer = _a[1], camera = _a[2], _b = _a[3], axisHeight = _b.axisHeight, axisWidth = _b.axisWidth, height = _b.height, width = _b.width;
+var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+var three_2 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+var _a = utils_1.init({
+    camera: {
+        position: [100, 100, 100],
+        lookAt: [0, 0, 0]
+    }
+}), scene = _a[0], renderer = _a[1], camera = _a[2], _b = _a[3], axisHeight = _b.axisHeight, axisWidth = _b.axisWidth, height = _b.height, width = _b.width;
+var geometry = new three_1.BoxGeometry(100, 100, 100);
+var material = new three_1.MeshBasicMaterial({ color: 0xffff00 });
+geometry.scale(2, 0.5, 0.5);
+var cubes = [];
+cubes[0] = new three_2.Mesh(geometry, material);
+cubes[1] = new three_2.Mesh(geometry, material);
+cubes[0].geometry.translate(100, 0, 0);
+cubes[1].geometry.translate(210, 0, 0);
+scene.add(cubes[0]);
+scene.add(cubes[1]);
+scene.add(utils_1.axes());
 var render = function () {
     requestAnimationFrame(render);
     renderer.render(scene, camera);
 };
 render();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJpbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLGtDQUFnQztBQUcxQixJQUFBLG1CQUtJLEVBSlIsYUFBSyxFQUNMLGdCQUFRLEVBQ1IsY0FBTSxFQUNOLFVBQXdDLEVBQXRDLDBCQUFVLEVBQUUsd0JBQVMsRUFBRSxrQkFBTSxFQUFFLGdCQUN6QixDQUFDO0FBRVgsSUFBTSxNQUFNLEdBQUc7SUFDYixxQkFBcUIsQ0FBQyxNQUFNLENBQUMsQ0FBQztJQUM5QixRQUFRLENBQUMsTUFBTSxDQUFDLEtBQUssRUFBRSxNQUFNLENBQUMsQ0FBQztBQUNqQyxDQUFDLENBQUM7QUFDRixNQUFNLEVBQUUsQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXJtLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiYXJtLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsa0NBQXNDO0FBQ3RDLCtCQUF1RDtBQUN2RCwrQkFBNkI7QUFFdkIsSUFBQTs7Ozs7RUFVSixFQVRBLGFBQUssRUFDTCxnQkFBUSxFQUNSLGNBQU0sRUFDTixVQUF3QyxFQUF0QywwQkFBVSxFQUFFLHdCQUFTLEVBQUUsa0JBQU0sRUFBRSxnQkFNakMsQ0FBQztBQUVILElBQUksUUFBUSxHQUFHLElBQUksbUJBQVcsQ0FBQyxHQUFHLEVBQUUsR0FBRyxFQUFFLEdBQUcsQ0FBQyxDQUFDO0FBQzlDLElBQUksUUFBUSxHQUFHLElBQUkseUJBQWlCLENBQUMsRUFBRSxLQUFLLEVBQUUsUUFBUSxFQUFFLENBQUMsQ0FBQztBQUMxRCxRQUFRLENBQUMsS0FBSyxDQUFDLENBQUMsRUFBRSxHQUFHLEVBQUUsR0FBRyxDQUFDLENBQUM7QUFDNUIsSUFBSSxLQUFLLEdBQUcsRUFBRSxDQUFDO0FBQ2YsS0FBSyxDQUFDLENBQUMsQ0FBQyxHQUFHLElBQUksWUFBSSxDQUFDLFFBQVEsRUFBRSxRQUFRLENBQUMsQ0FBQztBQUN4QyxLQUFLLENBQUMsQ0FBQyxDQUFDLEdBQUcsSUFBSSxZQUFJLENBQUMsUUFBUSxFQUFFLFFBQVEsQ0FBQyxDQUFDO0FBQ3hDLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxRQUFRLENBQUMsU0FBUyxDQUFDLEdBQUcsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUM7QUFDdkMsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLFFBQVEsQ0FBQyxTQUFTLENBQUMsR0FBRyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQztBQUN2QyxLQUFLLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDO0FBQ3BCLEtBQUssQ0FBQyxHQUFHLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUM7QUFDcEIsS0FBSyxDQUFDLEdBQUcsQ0FBQyxZQUFJLEVBQUUsQ0FBQyxDQUFDO0FBQ2xCLElBQU0sTUFBTSxHQUFHO0lBQ2IscUJBQXFCLENBQUMsTUFBTSxDQUFDLENBQUM7SUFDOUIsUUFBUSxDQUFDLE1BQU0sQ0FBQyxLQUFLLEVBQUUsTUFBTSxDQUFDLENBQUM7QUFDakMsQ0FBQyxDQUFDO0FBRUYsTUFBTSxFQUFFLENBQUMifQ==
 
 /***/ }),
 

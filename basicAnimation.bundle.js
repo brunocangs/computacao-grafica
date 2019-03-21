@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/index.ts");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/basicAnimation.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -48449,24 +48449,63 @@ function LensFlare() {
 
 /***/ }),
 
-/***/ "./src/exercises/index.ts":
-/*!********************************!*\
-  !*** ./src/exercises/index.ts ***!
-  \********************************/
+/***/ "./src/exercises/basicAnimation.ts":
+/*!*****************************************!*\
+  !*** ./src/exercises/basicAnimation.ts ***!
+  \*****************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+var THREE = __importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
 var utils_1 = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
+var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 var _a = utils_1.init(), scene = _a[0], renderer = _a[1], camera = _a[2], _b = _a[3], axisHeight = _b.axisHeight, axisWidth = _b.axisWidth, height = _b.height, width = _b.width;
+scene.add(utils_1.axes());
+var x0 = -axisWidth;
+var MAX_POINTS = 5000;
+var geometry = new THREE.BufferGeometry();
+// attributes
+var positions = new Float32Array(new Array(MAX_POINTS * 3).fill(0).map(function (item, index) {
+    var x = x0 + index / 3;
+    // Cada vértice são 3 posições do vetor
+    switch (index % 3) {
+        // Um vértice é, basicamente [x, y, z] = [case 0, case 1, case 2]
+        case 0:
+            return x;
+        case 1:
+            return Math.sin(x / 30) * 30;
+        case 2:
+            return 0;
+        default:
+            return 0;
+    }
+})); // 3 vertices per point
+geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+var drawCount = 3; // draw the first 2 points, only
+geometry.setDrawRange(0, 2);
+var line = new three_1.Line(geometry, new three_1.LineBasicMaterial({ color: 0xff0000 }));
+scene.add(line);
+var now = Date.now();
+var last = Date.now();
 var render = function () {
+    now = Date.now();
+    drawCount = Math.min(drawCount + 10, MAX_POINTS);
+    line.geometry.setDrawRange(0, drawCount);
     requestAnimationFrame(render);
     renderer.render(scene, camera);
 };
 render();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJpbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLGtDQUFnQztBQUcxQixJQUFBLG1CQUtJLEVBSlIsYUFBSyxFQUNMLGdCQUFRLEVBQ1IsY0FBTSxFQUNOLFVBQXdDLEVBQXRDLDBCQUFVLEVBQUUsd0JBQVMsRUFBRSxrQkFBTSxFQUFFLGdCQUN6QixDQUFDO0FBRVgsSUFBTSxNQUFNLEdBQUc7SUFDYixxQkFBcUIsQ0FBQyxNQUFNLENBQUMsQ0FBQztJQUM5QixRQUFRLENBQUMsTUFBTSxDQUFDLEtBQUssRUFBRSxNQUFNLENBQUMsQ0FBQztBQUNqQyxDQUFDLENBQUM7QUFDRixNQUFNLEVBQUUsQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYmFzaWNBbmltYXRpb24uanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJiYXNpY0FuaW1hdGlvbi50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7QUFBQSwyQ0FBK0I7QUFDL0Isa0NBQTZEO0FBQzdELCtCQUF5RTtBQUVuRSxJQUFBLG1CQUtJLEVBSlIsYUFBSyxFQUNMLGdCQUFRLEVBQ1IsY0FBTSxFQUNOLFVBQXdDLEVBQXRDLDBCQUFVLEVBQUUsd0JBQVMsRUFBRSxrQkFBTSxFQUFFLGdCQUN6QixDQUFDO0FBQ1gsS0FBSyxDQUFDLEdBQUcsQ0FBQyxZQUFJLEVBQUUsQ0FBQyxDQUFDO0FBRWxCLElBQUksRUFBRSxHQUFHLENBQUMsU0FBUyxDQUFDO0FBRXBCLElBQU0sVUFBVSxHQUFHLElBQUksQ0FBQztBQUV4QixJQUFJLFFBQVEsR0FBRyxJQUFJLEtBQUssQ0FBQyxjQUFjLEVBQUUsQ0FBQztBQUUxQyxhQUFhO0FBQ2IsSUFBSSxTQUFTLEdBQUcsSUFBSSxZQUFZLENBQzlCLElBQUksS0FBSyxDQUFDLFVBQVUsR0FBRyxDQUFDLENBQUMsQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUMsR0FBRyxDQUFDLFVBQUMsSUFBSSxFQUFFLEtBQUs7SUFDaEQsSUFBTSxDQUFDLEdBQUcsRUFBRSxHQUFHLEtBQUssR0FBRyxDQUFDLENBQUM7SUFDekIsdUNBQXVDO0lBQ3ZDLFFBQVEsS0FBSyxHQUFHLENBQUMsRUFBRTtRQUNuQixpRUFBaUU7UUFDakUsS0FBSyxDQUFDO1lBQ0osT0FBTyxDQUFDLENBQUM7UUFDWCxLQUFLLENBQUM7WUFDSixPQUFPLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxHQUFHLEVBQUUsQ0FBQyxHQUFHLEVBQUUsQ0FBQztRQUMvQixLQUFLLENBQUM7WUFDSixPQUFPLENBQUMsQ0FBQztRQUNYO1lBQ0UsT0FBTyxDQUFDLENBQUM7S0FDVjtBQUNILENBQUMsQ0FBQyxDQUNILENBQUMsQ0FBQyx1QkFBdUI7QUFDMUIsUUFBUSxDQUFDLFlBQVksQ0FBQyxVQUFVLEVBQUUsSUFBSSxLQUFLLENBQUMsZUFBZSxDQUFDLFNBQVMsRUFBRSxDQUFDLENBQUMsQ0FBQyxDQUFDO0FBRTNFLElBQUksU0FBUyxHQUFHLENBQUMsQ0FBQyxDQUFDLGdDQUFnQztBQUNuRCxRQUFRLENBQUMsWUFBWSxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQztBQUU1QixJQUFNLElBQUksR0FBRyxJQUFJLFlBQUksQ0FBQyxRQUFRLEVBQUUsSUFBSSx5QkFBaUIsQ0FBQyxFQUFFLEtBQUssRUFBRSxRQUFRLEVBQUUsQ0FBQyxDQUFDLENBQUM7QUFDNUUsS0FBSyxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsQ0FBQztBQUVoQixJQUFJLEdBQUcsR0FBRyxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUM7QUFDckIsSUFBSSxJQUFJLEdBQUcsSUFBSSxDQUFDLEdBQUcsRUFBRSxDQUFDO0FBRXRCLElBQU0sTUFBTSxHQUFHO0lBQ2IsR0FBRyxHQUFHLElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQztJQUNqQixTQUFTLEdBQUcsSUFBSSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEdBQUcsRUFBRSxFQUFFLFVBQVUsQ0FBQyxDQUFDO0lBQ2hELElBQUksQ0FBQyxRQUEyQixDQUFDLFlBQVksQ0FBQyxDQUFDLEVBQUUsU0FBUyxDQUFDLENBQUM7SUFDN0QscUJBQXFCLENBQUMsTUFBTSxDQUFDLENBQUM7SUFDOUIsUUFBUSxDQUFDLE1BQU0sQ0FBQyxLQUFLLEVBQUUsTUFBTSxDQUFDLENBQUM7QUFDakMsQ0FBQyxDQUFDO0FBRUYsTUFBTSxFQUFFLENBQUMifQ==
 
 /***/ }),
 

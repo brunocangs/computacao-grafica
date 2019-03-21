@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/index.ts");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/1-1.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -48449,10 +48449,10 @@ function LensFlare() {
 
 /***/ }),
 
-/***/ "./src/exercises/index.ts":
-/*!********************************!*\
-  !*** ./src/exercises/index.ts ***!
-  \********************************/
+/***/ "./src/exercises/1-1.ts":
+/*!******************************!*\
+  !*** ./src/exercises/1-1.ts ***!
+  \******************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -48460,13 +48460,76 @@ function LensFlare() {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var utils_1 = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
-var _a = utils_1.init(), scene = _a[0], renderer = _a[1], camera = _a[2], _b = _a[3], axisHeight = _b.axisHeight, axisWidth = _b.axisWidth, height = _b.height, width = _b.width;
+var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+// @ts-ignore
+var _a = utils_1.init(), baseScene = _a[0], renderer = _a[1], camera = _a[2], _b = _a[3], axisHeight = _b.axisHeight, axisWidth = _b.axisWidth, height = _b.height, width = _b.width;
+var currentScene = 0;
+var scenes = [new three_1.Scene(), new three_1.Scene(), new three_1.Scene(), new three_1.Scene()];
+var scene;
+// Primeira cena
+scene = scenes[0];
+var firstSceneTriangle = utils_1.shape([
+    [0, 0],
+    [100, 0],
+    [100 * Math.cos((60 * Math.PI) / 180), 100 * Math.sin((60 * Math.PI) / 180)]
+], { color: 0xff0000 });
+scene.add(firstSceneTriangle);
+// Segunda scena
+scene = scenes[1];
+var tiragleLineGeometry = new three_1.Geometry();
+tiragleLineGeometry.vertices.push(new three_1.Vector3(0, 0, 2), new three_1.Vector3(100, 0, 2), new three_1.Vector3(100 * Math.cos((60 * Math.PI) / 180), 100 * Math.sin((60 * Math.PI) / 180), 2));
+var triangleLineMaterial = new three_1.LineBasicMaterial({ color: 0xff0000 });
+var triangleLine = new three_1.LineLoop(tiragleLineGeometry, triangleLineMaterial);
+scene.add(triangleLine);
+// Terceira cena
+scene = scenes[2];
+scene.add(new three_1.LineLoop(tiragleLineGeometry, triangleLineMaterial));
+var thirdSceneTriangle = utils_1.shape([
+    [0, 0],
+    [-100, 0],
+    [
+        -100 * Math.cos((60 * Math.PI) / 180),
+        -100 * Math.sin((60 * Math.PI) / 180)
+    ]
+], { color: 0xff0000 });
+scene.add(thirdSceneTriangle);
+// Quarta cena
+scene = scenes[3];
+// Primeiro ponto, rotacionado 60 graus acima do eixo X, distancia 100;
+var x = function (angle) { return 100 * Math.cos((angle * Math.PI) / 180); };
+var y = function (angle) { return 100 * Math.sin((angle * Math.PI) / 180); };
+// Primeiro ponto no angulo de 60
+var initalAngle = 60;
+var geo = new three_1.Geometry();
+var mat = new three_1.LineBasicMaterial({ color: 0xffffff });
+// Rotaciona para baixo de 60 em 60 graus adicionando vértice
+for (var i = 0; i < 6; i++) {
+    geo.vertices.push(new three_1.Vector3(x(initalAngle + i * -60), y(initalAngle + i * -60), 1));
+}
+var lin = new three_1.Line(geo, mat);
+scene.add(lin);
+for (var _i = 0, scenes_1 = scenes; _i < scenes_1.length; _i++) {
+    var scene_1 = scenes_1[_i];
+    scene_1.add(utils_1.axes());
+}
+// Inicializa o ciclo de renderização
 var render = function () {
     requestAnimationFrame(render);
     renderer.render(scene, camera);
 };
 render();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJpbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLGtDQUFnQztBQUcxQixJQUFBLG1CQUtJLEVBSlIsYUFBSyxFQUNMLGdCQUFRLEVBQ1IsY0FBTSxFQUNOLFVBQXdDLEVBQXRDLDBCQUFVLEVBQUUsd0JBQVMsRUFBRSxrQkFBTSxFQUFFLGdCQUN6QixDQUFDO0FBRVgsSUFBTSxNQUFNLEdBQUc7SUFDYixxQkFBcUIsQ0FBQyxNQUFNLENBQUMsQ0FBQztJQUM5QixRQUFRLENBQUMsTUFBTSxDQUFDLEtBQUssRUFBRSxNQUFNLENBQUMsQ0FBQztBQUNqQyxDQUFDLENBQUM7QUFDRixNQUFNLEVBQUUsQ0FBQyJ9
+// Escuta em keydown
+window.addEventListener('keydown', function (ev) {
+    switch (ev.key) {
+        case 'ArrowRight':
+            scene = scenes[currentScene++ % 4];
+            break;
+        case 'ArrowLeft':
+            scene = scenes[(currentScene = currentScene + 3) % 4];
+            break;
+    }
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiMS0xLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiMS0xLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsa0NBQTZDO0FBQzdDLCtCQU9lO0FBQ2YsYUFBYTtBQUNQLElBQUEsbUJBS0ksRUFKUixpQkFBUyxFQUNULGdCQUFRLEVBQ1IsY0FBTSxFQUNOLFVBQXdDLEVBQXRDLDBCQUFVLEVBQUUsd0JBQVMsRUFBRSxrQkFBTSxFQUFFLGdCQUN6QixDQUFDO0FBRVgsSUFBSSxZQUFZLEdBQUcsQ0FBQyxDQUFDO0FBRXJCLElBQU0sTUFBTSxHQUFHLENBQUMsSUFBSSxhQUFLLEVBQUUsRUFBRSxJQUFJLGFBQUssRUFBRSxFQUFFLElBQUksYUFBSyxFQUFFLEVBQUUsSUFBSSxhQUFLLEVBQUUsQ0FBQyxDQUFDO0FBRXBFLElBQUksS0FBWSxDQUFDO0FBQ2pCLGdCQUFnQjtBQUNoQixLQUFLLEdBQUcsTUFBTSxDQUFDLENBQUMsQ0FBQyxDQUFDO0FBQ2xCLElBQU0sa0JBQWtCLEdBQUcsYUFBSyxDQUM5QjtJQUNFLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQztJQUNOLENBQUMsR0FBRyxFQUFFLENBQUMsQ0FBQztJQUNSLENBQUMsR0FBRyxHQUFHLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxFQUFFLEdBQUcsSUFBSSxDQUFDLEVBQUUsQ0FBQyxHQUFHLEdBQUcsQ0FBQyxFQUFFLEdBQUcsR0FBRyxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUMsRUFBRSxHQUFHLElBQUksQ0FBQyxFQUFFLENBQUMsR0FBRyxHQUFHLENBQUMsQ0FBQztDQUM3RSxFQUNELEVBQUUsS0FBSyxFQUFFLFFBQVEsRUFBRSxDQUNwQixDQUFDO0FBQ0YsS0FBSyxDQUFDLEdBQUcsQ0FBQyxrQkFBa0IsQ0FBQyxDQUFDO0FBRTlCLGdCQUFnQjtBQUNoQixLQUFLLEdBQUcsTUFBTSxDQUFDLENBQUMsQ0FBQyxDQUFDO0FBQ2xCLElBQU0sbUJBQW1CLEdBQUcsSUFBSSxnQkFB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
 
 /***/ }),
 
