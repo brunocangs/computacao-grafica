@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import * as THREE from 'three';
 import {
   Shape,
   Vector2,
@@ -9,8 +9,8 @@ import {
   Vector3,
   LineBasicMaterial,
   Line
-} from "three";
-
+} from 'three';
+export { init } from './init';
 type PointArray2D = [number, number][];
 type PointArray3D = [number, number, number][];
 

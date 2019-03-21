@@ -8,7 +8,9 @@ const exercises = fs.readdirSync(exercisesDir);
 module.exports = {
   mode: 'development',
   entry: exercises.reduce((prev, curr) => {
-    prev[curr.split('.')[0]] = require.resolve(path.resolve(exercisesDir, curr));
+    prev[curr.split('.')[0]] = require.resolve(
+      path.resolve(exercisesDir, curr)
+    );
     return prev;
   }, {}),
   plugins: exercises.map(exercise => {
@@ -17,20 +19,23 @@ module.exports = {
       title: 'Computação Gráfica',
       template: 'index.html',
       chunks: [filename],
-      filename: `${filename}.html`
+      filename: filename === 'index' ? 'index.html' : `${filename}/index.html`
     });
   }),
   output: {
     path: __dirname + '/dist',
-    publicPath: process.env.NODE_ENV === 'development' ? '/' : '/computacao-grafica',
-    filename: '[name].bundle.js',
+    publicPath:
+      process.env.NODE_ENV === 'development' ? '/' : '/computacao-grafica',
+    filename: '[name].bundle.js'
   },
   module: {
-    rules: [{
-      test: /\.tsx?$/,
-      use: 'ts-loader',
-      exclude: /node_modules/
-    }]
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      }
+    ]
   },
   resolve: {
     extensions: ['.json', '.ts', '.js']
@@ -39,6 +44,6 @@ module.exports = {
   devServer: {
     contentBase: path.join('/dist'),
     hot: true,
-    port: 3000,
+    port: 3000
   }
 };
