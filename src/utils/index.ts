@@ -8,7 +8,8 @@ import {
   Geometry,
   Vector3,
   LineBasicMaterial,
-  Line
+  Line,
+  Group
 } from 'three';
 export { init } from './init';
 
@@ -18,19 +19,26 @@ export type PointArray2D = [number, number][];
 export type PointArray3D = [number, number, number][];
 
 export const axes = () => {
-  let material = new THREE.LineBasicMaterial({ color: 0xffffff });
-  let axes = new THREE.Geometry();
-  axes.vertices.push(new THREE.Vector3(-9999, 0, 0));
-  axes.vertices.push(new THREE.Vector3(9999, 0, 0));
-  axes.vertices.push(new THREE.Vector3(0, 0, 0));
-  axes.vertices.push(new THREE.Vector3(0, -9999, 0));
-  axes.vertices.push(new THREE.Vector3(0, 9999, 0));
-  axes.vertices.push(new THREE.Vector3(0, 0, 0));
-  axes.vertices.push(new THREE.Vector3(0, 0, -9999));
-  axes.vertices.push(new THREE.Vector3(0, 0, 9999));
+  let xMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+  let yMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+  let zMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+  let xAxis = new THREE.Geometry();
+  let yAxis = new THREE.Geometry();
+  let zAxis = new THREE.Geometry();
+  xAxis.vertices.push(new THREE.Vector3(-9999, 0, 0));
+  xAxis.vertices.push(new THREE.Vector3(9999, 0, 0));
+  // axes.vertices.push(new THREE.Vector3(0, 0, 0));
+  yAxis.vertices.push(new THREE.Vector3(0, -9999, 0));
+  yAxis.vertices.push(new THREE.Vector3(0, 9999, 0));
+  // axes.vertices.push(new THREE.Vector3(0, 0, 0));
+  zAxis.vertices.push(new THREE.Vector3(0, 0, -9999));
+  zAxis.vertices.push(new THREE.Vector3(0, 0, 9999));
 
-  let line = new THREE.Line(axes, material);
-  return line;
+  let xLine = new THREE.Line(xAxis, xMaterial);
+  let yLine = new THREE.Line(yAxis, yMaterial);
+  let zLine = new THREE.Line(zAxis, zMaterial);
+  const axes = new Group();
+  return axes.add(xLine, yLine, zLine);
 };
 
 export const square = (
@@ -77,3 +85,5 @@ export const line3D = (
   const line = new Line(geo, mat);
   return line;
 };
+
+export const degToRad = (deg: number) => (deg * Math.PI) / 180;

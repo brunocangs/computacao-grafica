@@ -1,5 +1,6 @@
 import { WebGLRenderer, OrthographicCamera, Scene, PointLight } from 'three';
 import { Point3D } from '.';
+import { AmbientLight } from 'three';
 type BoundingBox = {
   width: number;
   height: number;
@@ -28,7 +29,7 @@ export const init: (
     axisWidth,
     axisHeight,
     -axisHeight,
-    1,
+    -1,
     9000
   );
 
@@ -39,8 +40,20 @@ export const init: (
     camera.lookAt(...fields.camera.lookAt);
   }
   let scene = new Scene();
-  var light = new PointLight(0xff0000, 1, 100);
-  light.position.set(50, 50, 50);
-  scene.add(light);
+  var ambientLight = new AmbientLight(0x000000);
+  scene.add(ambientLight);
+
+  var lights = [];
+  lights[0] = new PointLight(0xffffff, 1, 0);
+  lights[1] = new PointLight(0xffffff, 1, 0);
+  lights[2] = new PointLight(0xffffff, 1, 0);
+
+  lights[0].position.set(0, 200, 0);
+  lights[1].position.set(100, 200, 100);
+  lights[2].position.set(-100, -200, -100);
+
+  scene.add(lights[0]);
+  scene.add(lights[1]);
+  scene.add(lights[2]);
   return [scene, renderer, camera, { width, height, axisWidth, axisHeight }];
 };
