@@ -118,7 +118,7 @@ const start = () => {
 
 const render = () => {
   requestAnimationFrame(render);
-  // angle += 0.3;
+  angle += 0.1;
   const components: Object3D[] = start();
   camera.position.set(
     x * Math.cos(degToRad(angle)),
