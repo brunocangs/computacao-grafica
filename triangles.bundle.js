@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/basicAnimation.ts");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/triangles.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -48449,63 +48449,117 @@ function LensFlare() {
 
 /***/ }),
 
-/***/ "./src/exercises/basicAnimation.ts":
-/*!*****************************************!*\
-  !*** ./src/exercises/basicAnimation.ts ***!
-  \*****************************************/
+/***/ "./src/exercises/triangles.ts":
+/*!************************************!*\
+  !*** ./src/exercises/triangles.ts ***!
+  \************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = __importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
 var utils_1 = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-var _a = utils_1.init(), scene = _a[0], renderer = _a[1], camera = _a[2], _b = _a[3], axisHeight = _b.axisHeight, axisWidth = _b.axisWidth, height = _b.height, width = _b.width;
-scene.add(utils_1.axes());
-var x0 = -axisWidth;
-var MAX_POINTS = 5000;
-var geometry = new THREE.BufferGeometry();
-// attributes
-var positions = new Float32Array(new Array(MAX_POINTS * 3).fill(0).map(function (item, index) {
-    var x = x0 + index / 3;
-    // Cada vértice são 3 posições do vetor
-    switch (index % 3) {
-        // Um vértice é, basicamente [x, y, z] = [case 0, case 1, case 2]
-        case 0:
-            return x;
-        case 1:
-            return Math.sin(x / 30) * 30;
-        case 2:
-            return 0;
-        default:
-            return 0;
+// Variáveis globais
+var size = 250;
+var after = null;
+var now = new Date();
+var fps = 60;
+var quantity = 2;
+var dots = 3;
+var colors = new Array(quantity).fill(null).map(function () { return Math.random() * 0xffffff; });
+// Escutando cliques no teclado
+window.addEventListener('keydown', function (e) {
+    console.log(e.key);
+    switch (e.key) {
+        case '-':
+            fps = Math.max(15, fps / 2);
+            break;
+        case '=':
+            fps = Math.min(60, fps * 2);
+            break;
     }
-})); // 3 vertices per point
-geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-var drawCount = 3; // draw the first 2 points, only
-geometry.setDrawRange(0, 2);
-var line = new three_1.Line(geometry, new three_1.LineBasicMaterial({ color: 0xff0000 }));
-scene.add(line);
-var now = Date.now();
-var last = Date.now();
+    console.log(fps);
+});
+var limitFps = function (fps, callback) {
+    var frameTime = 1000 / fps;
+    if (after && after.getTime() - now.getTime() >= frameTime) {
+        now = after;
+        callback();
+    }
+    after = new Date();
+};
+var randomNegative = function () {
+    return Math.random() >= 0.5 ? -1 : 1;
+};
+var randomCoords = function (limit, floor) {
+    return floor
+        ? [
+            Math.floor(Math.random() * limit) * randomNegative(),
+            Math.floor(Math.random() * limit) * randomNegative(),
+            0
+        ]
+        : [
+            Math.random() * limit * randomNegative(),
+            Math.random() * limit * randomNegative(),
+            0
+        ];
+};
+var coordinates = new Array(quantity)
+    .fill(null)
+    .map(function () { return new Array(dots).fill(null).map(function () { return randomCoords(size, true); }); });
+var speeds = new Array(quantity)
+    .fill(null)
+    .map(function () { return new Array(dots).fill(null).map(function () { return randomCoords(3); }); });
+var _a = utils_1.init(), scene = _a[0], renderer = _a[1], camera = _a[2], _b = _a[3], axisHeight = _b.axisHeight, axisWidth = _b.axisWidth, height = _b.height, width = _b.width;
+var material = new three_1.LineBasicMaterial({
+    color: 0xff00ff
+});
+var start = function () {
+    var limitBox = utils_1.lineLoop([[size, size, 0], [size, -size, 0], [-size, -size, 0], [-size, size, 0]], {
+        color: 0xffffff
+    });
+    var triangles = coordinates.map(function (coord, index) {
+        return utils_1.lineLoop(coord, { color: colors[index] });
+    });
+    return [limitBox].concat(triangles);
+};
+var update = function () {
+    // Para cada triangulo
+    for (var item in coordinates) {
+        var triangle = coordinates[item];
+        var tSpeed = speeds[item];
+        // Para cada vértice
+        for (var tIndex in triangle) {
+            var point = triangle[tIndex];
+            var pSpeeds = tSpeed[tIndex];
+            // Para cada coordenada
+            for (var cIndex in point) {
+                var pos = point[cIndex];
+                var delta = pSpeeds[cIndex];
+                var nPos = pos + delta;
+                if (Math.abs(nPos) >= size) {
+                    nPos = pos - delta;
+                    speeds[item][tIndex][cIndex] *= -1;
+                }
+                coordinates[item][tIndex][cIndex] = nPos;
+            }
+        }
+    }
+};
 var render = function () {
-    now = Date.now();
-    drawCount = Math.min(drawCount + 10, MAX_POINTS);
-    line.geometry.setDrawRange(0, drawCount);
+    after = new Date();
+    // @ts-ignore
     requestAnimationFrame(render);
+    limitFps(fps, update);
+    var components = start();
+    scene.add.apply(scene, components);
     renderer.render(scene, camera);
+    scene.remove.apply(scene, components);
 };
 render();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYmFzaWNBbmltYXRpb24uanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJiYXNpY0FuaW1hdGlvbi50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7QUFBQSwyQ0FBK0I7QUFDL0Isa0NBQTZEO0FBQzdELCtCQUF5RTtBQUVuRSxJQUFBLG1CQUtJLEVBSlIsYUFBSyxFQUNMLGdCQUFRLEVBQ1IsY0FBTSxFQUNOLFVBQXdDLEVBQXRDLDBCQUFVLEVBQUUsd0JBQVMsRUFBRSxrQkFBTSxFQUFFLGdCQUN6QixDQUFDO0FBQ1gsS0FBSyxDQUFDLEdBQUcsQ0FBQyxZQUFJLEVBQUUsQ0FBQyxDQUFDO0FBRWxCLElBQUksRUFBRSxHQUFHLENBQUMsU0FBUyxDQUFDO0FBRXBCLElBQU0sVUFBVSxHQUFHLElBQUksQ0FBQztBQUV4QixJQUFJLFFBQVEsR0FBRyxJQUFJLEtBQUssQ0FBQyxjQUFjLEVBQUUsQ0FBQztBQUUxQyxhQUFhO0FBQ2IsSUFBSSxTQUFTLEdBQUcsSUFBSSxZQUFZLENBQzlCLElBQUksS0FBSyxDQUFDLFVBQVUsR0FBRyxDQUFDLENBQUMsQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUMsR0FBRyxDQUFDLFVBQUMsSUFBSSxFQUFFLEtBQUs7SUFDaEQsSUFBTSxDQUFDLEdBQUcsRUFBRSxHQUFHLEtBQUssR0FBRyxDQUFDLENBQUM7SUFDekIsdUNBQXVDO0lBQ3ZDLFFBQVEsS0FBSyxHQUFHLENBQUMsRUFBRTtRQUNuQixpRUFBaUU7UUFDakUsS0FBSyxDQUFDO1lBQ0osT0FBTyxDQUFDLENBQUM7UUFDWCxLQUFLLENBQUM7WUFDSixPQUFPLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxHQUFHLEVBQUUsQ0FBQyxHQUFHLEVBQUUsQ0FBQztRQUMvQixLQUFLLENBQUM7WUFDSixPQUFPLENBQUMsQ0FBQztRQUNYO1lBQ0UsT0FBTyxDQUFDLENBQUM7S0FDVjtBQUNILENBQUMsQ0FBQyxDQUNILENBQUMsQ0FBQyx1QkFBdUI7QUFDMUIsUUFBUSxDQUFDLFlBQVksQ0FBQyxVQUFVLEVBQUUsSUFBSSxLQUFLLENBQUMsZUFBZSxDQUFDLFNBQVMsRUFBRSxDQUFDLENBQUMsQ0FBQyxDQUFDO0FBRTNFLElBQUksU0FBUyxHQUFHLENBQUMsQ0FBQyxDQUFDLGdDQUFnQztBQUNuRCxRQUFRLENBQUMsWUFBWSxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQztBQUU1QixJQUFNLElBQUksR0FBRyxJQUFJLFlBQUksQ0FBQyxRQUFRLEVBQUUsSUFBSSx5QkFBaUIsQ0FBQyxFQUFFLEtBQUssRUFBRSxRQUFRLEVBQUUsQ0FBQyxDQUFDLENBQUM7QUFDNUUsS0FBSyxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsQ0FBQztBQUVoQixJQUFJLEdBQUcsR0FBRyxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUM7QUFDckIsSUFBSSxJQUFJLEdBQUcsSUFBSSxDQUFDLEdBQUcsRUFBRSxDQUFDO0FBRXRCLElBQU0sTUFBTSxHQUFHO0lBQ2IsR0FBRyxHQUFHLElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQztJQUNqQixTQUFTLEdBQUcsSUFBSSxDQUFDLEdBQUcsQ0FBQyxTQUFTLEdBQUcsRUFBRSxFQUFFLFVBQVUsQ0FBQyxDQUFDO0lBQ2hELElBQUksQ0FBQyxRQUEyQixDQUFDLFlBQVksQ0FBQyxDQUFDLEVBQUUsU0FBUyxDQUFDLENBQUM7SUFDN0QscUJBQXFCLENBQUMsTUFBTSxDQUFDLENBQUM7SUFDOUIsUUFBUSxDQUFDLE1BQU0sQ0FBQyxLQUFLLEVBQUUsTUFBTSxDQUFDLENBQUM7QUFDakMsQ0FBQyxDQUFDO0FBRUYsTUFBTSxFQUFFLENBQUMifQ==
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidHJpYW5nbGVzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsidHJpYW5nbGVzLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsa0NBQW1EO0FBRW5ELCtCQUEwQztBQUUxQyxvQkFBb0I7QUFDcEIsSUFBTSxJQUFJLEdBQUcsR0FBRyxDQUFDO0FBQ2pCLElBQUksS0FBSyxHQUFnQixJQUFJLENBQUM7QUFDOUIsSUFBSSxHQUFHLEdBQUcsSUFBSSxJQUFJLEVBQUUsQ0FBQztBQUNyQixJQUFJLEdBQUcsR0FBRyxFQUFFLENBQUM7QUFDYixJQUFJLFFBQVEsR0FBRyxDQUFDLENBQUM7QUFDakIsSUFBSSxJQUFJLEdBQUcsQ0FBQyxDQUFDO0FBQ2IsSUFBSSxNQUFNLEdBQUcsSUFBSSxLQUFLLENBQUMsUUFBUSxDQUFDLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxDQUFDLEdBQUcsQ0FBQyxjQUFNLE9BQUEsSUFBSSxDQUFDLE1BQU0sRUFBRSxHQUFHLFFBQVEsRUFBeEIsQ0FBd0IsQ0FBQyxDQUFDO0FBRWhGLCtCQUErQjtBQUMvQixNQUFNLENBQUMsZ0JBQWdCLENBQUMsU0FBUyxFQUFFLFVBQUEsQ0FBQztJQUNsQyxPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxHQUFHLENBQUMsQ0FBQztJQUNuQixRQUFRLENBQUMsQ0FBQyxHQUFHLEVBQUU7UUFDZixLQUFLLEdBQUc7WUFDTixHQUFHLEdBQUcsSUFBSSxDQUFDLEdBQUcsQ0FBQyxFQUFFLEVBQUUsR0FBRyxHQUFHLENBQUMsQ0FBQyxDQUFDO1lBQzVCLE1BQU07UUFDUixLQUFLLEdBQUc7WUFDTixHQUFHLEdBQUcsSUFBSSxDQUFDLEdBQUcsQ0FBQyxFQUFFLEVBQUUsR0FBRyxHQUFHLENBQUMsQ0FBQyxDQUFDO1lBQzVCLE1BQU07S0FDUDtJQUNELE9BQU8sQ0FBQyxHQUFHLENBQUMsR0FBRyxDQUFDLENBQUM7QUFDbkIsQ0FBQyxDQUFDLENBQUM7QUFFSCxJQUFNLFFBQVEs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
 
 /***/ }),
 
