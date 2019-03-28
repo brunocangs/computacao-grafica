@@ -9,8 +9,10 @@ import {
   Vector3,
   LineBasicMaterial,
   Line,
-  Group
+  Group,
+  LineLoop
 } from 'three';
+import { LineBasicMaterialParameters } from 'three';
 export { init } from './init';
 
 export type Point2D = [number, number];
@@ -87,3 +89,12 @@ export const line3D = (
 };
 
 export const degToRad = (deg: number) => (deg * Math.PI) / 180;
+
+export const lineLoop = (points: PointArray3D, options: LineBasicMaterialParameters) => {
+  const lineLoopGeometry = new Geometry();
+  const lineLoopMaterial = new LineBasicMaterial(options);
+  lineLoopGeometry.vertices.push(
+    ...points.map((coords) => new Vector3(...coords))
+  );
+  return new LineLoop(lineLoopGeometry, lineLoopMaterial);
+}
