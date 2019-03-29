@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/arm.ts");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/exercises/perspective.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -48449,10 +48449,10 @@ function LensFlare() {
 
 /***/ }),
 
-/***/ "./src/exercises/arm.ts":
-/*!******************************!*\
-  !*** ./src/exercises/arm.ts ***!
-  \******************************/
+/***/ "./src/exercises/perspective.ts":
+/*!**************************************!*\
+  !*** ./src/exercises/perspective.ts ***!
+  \**************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -48462,116 +48462,64 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var utils_1 = __webpack_require__(/*! ../utils */ "./src/utils/index.ts");
 var three_1 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
 var three_2 = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-var x = 1300, y = 800, z = 1300, angle = 60;
-var axies = utils_1.axes();
-var _a = utils_1.init({
-    camera: {
-        position: [x, y, z],
-        lookAt: [0, 0, 0]
-    }
-}), scene = _a[0], renderer = _a[1], camera = _a[2], _b = _a[3], axisHeight = _b.axisHeight, axisWidth = _b.axisWidth, height = _b.height, width = _b.width;
-var armsRotation = [0, 0, 0];
-var currentArm = 0;
-var clawOpening = 0;
-var geometry = new three_1.BoxGeometry(30, 30, 30);
-var material = new three_1.MeshLambertMaterial({
-    color: 0xffff00,
-    side: three_1.DoubleSide
+var x = 0, y = 0;
+utils_1.controls({
+    'Seta para cima': 'Move o cubo uma célula para cima',
+    'Seta para baixo': 'Move o cubo uma célula para baixo',
+    'Seta para direita': 'Move o cubo uma célula para direita',
+    'Seta para esquerda': 'Move o cubo uma célula para esquerda'
 });
-var clawMaterial = new three_1.MeshLambertMaterial({
-    color: 0xff0000,
-    side: three_1.DoubleSide
-});
-geometry.scale(2, 0.5, 0.5);
-window.addEventListener('keydown', function (ev) {
-    console.log(ev.key);
-    switch (ev.key) {
-        case 'q':
-            armsRotation[currentArm] += utils_1.degToRad(5);
-            break;
-        case 'e':
-            armsRotation[currentArm] -= utils_1.degToRad(5);
-            break;
-        case '1':
-            currentArm = 0;
-            break;
-        case '2':
-            currentArm = 1;
-            break;
-        case '3':
-            currentArm = 2;
+window.addEventListener('keydown', function (e) {
+    switch (e.key) {
+        case 'ArrowRight':
+            x = Math.min(4, x + 1);
             break;
         case 'ArrowUp':
-            clawOpening += utils_1.degToRad(5);
+            y = Math.min(4, y + 1);
+            break;
+        case 'ArrowLeft':
+            x = Math.max(0, x - 1);
             break;
         case 'ArrowDown':
-            clawOpening -= utils_1.degToRad(5);
+            y = Math.max(0, y - 1);
             break;
     }
+    console.log(e.key, x, y);
 });
-var claw = function () {
-    var firstBottomGeometry = geometry
-        .clone()
-        .translate(30, 0, 0)
-        .rotateZ(utils_1.degToRad(35))
-        .translate(-60 * Math.cos(utils_1.degToRad(35)), 0, 0);
-    var secondBottomGeometry = firstBottomGeometry.clone().scale(-1, 1, 1);
-    var firstBottom = new three_2.Mesh(firstBottomGeometry, clawMaterial);
-    var secondBottom = new three_2.Mesh(secondBottomGeometry, clawMaterial);
-    var firstTopGeometry = firstBottomGeometry.clone().scale(1, -1, 1);
-    var secondTopGeometry = secondBottomGeometry.clone().scale(1, -1, 1);
-    var firstTop = new three_2.Mesh(firstTopGeometry, clawMaterial);
-    var secondTop = new three_2.Mesh(secondTopGeometry, clawMaterial);
-    var ClawBottom = new three_2.Group();
-    ClawBottom.add(firstBottom, secondBottom);
-    ClawBottom.rotateZ(clawOpening);
-    ClawBottom.translateX(60 * Math.cos(utils_1.degToRad(35)));
-    var ClawTop = new three_2.Group();
-    ClawTop.add(firstTop, secondTop);
-    ClawTop.rotateZ(-clawOpening);
-    ClawTop.translateX(60 * Math.cos(utils_1.degToRad(35)));
-    var Claw = new three_2.Group();
-    Claw.add(ClawTop, ClawBottom);
-    Claw.translateX(30 * Math.cos(utils_1.degToRad(35)));
-    return Claw;
+var _a = utils_1.initPerspective(60, 16 / 9, 1, 1000, {
+    camera: {
+        lookAt: [25, 25, 0],
+        position: [25, -25, 25]
+    }
+}), scene = _a[0], renderer = _a[1], camera = _a[2], viewport = _a[3];
+var grid = function () {
+    var Grid = new three_2.Group();
+    for (var i = 0; i <= 50; i = i + 10) {
+        var lineX = utils_1.line3D([[i, 0, 0], [i, 50, 0]], {
+            color: 0xffffff
+        });
+        var lineY = utils_1.line3D([[0, i, 0], [50, i, 0]], {
+            color: 0xffffff
+        });
+        Grid.add(lineX, lineY);
+    }
+    return Grid;
 };
-var start = function () {
-    var Claw = claw();
-    // Claw.translateX(30);
-    var thirdArmGeometry = geometry.clone();
-    var thirdArmBase = new three_2.Mesh(thirdArmGeometry, material);
-    var thirdArm = new three_2.Group();
-    thirdArm.add(thirdArmBase, Claw);
-    thirdArm.translateX(30);
-    thirdArm.rotateZ(armsRotation[2]);
-    thirdArm.translateX(30);
-    var secondArmGeometry = geometry.clone();
-    var secondArmBase = new three_2.Mesh(secondArmGeometry, material);
-    var secondArm = new three_2.Group();
-    secondArm.translateX(30);
-    secondArm.rotateZ(armsRotation[1]);
-    secondArm.translateX(30);
-    secondArm.add(secondArmBase, thirdArm);
-    var firstArmGeometry = geometry.clone();
-    var firstArmBase = new three_2.Mesh(firstArmGeometry, material);
-    var firstArm = new three_2.Group();
-    firstArm.add(firstArmBase, secondArm);
-    firstArm.rotateZ(armsRotation[0]);
-    firstArm.translateX(30);
-    return [firstArm, axies];
-};
+var geo = new three_1.BoxGeometry(10, 10, 10);
+var mat = new three_1.MeshLambertMaterial({
+    color: 0xff0000
+});
+var block = new three_1.Mesh(geo, mat);
+block.position.set(5 + x * 10, 5 + y * 10, 5);
+var Grid = grid();
+scene.add(block, Grid);
 var render = function () {
     requestAnimationFrame(render);
-    angle += 0.1;
-    var components = start();
-    camera.position.set(x * Math.cos(utils_1.degToRad(angle)), y, x * Math.sin(utils_1.degToRad(angle)));
-    scene.add.apply(scene, components);
-    camera.lookAt(0, 0, 0);
+    block.position.set(5 + x * 10, 5 + y * 10, 5);
     renderer.render(scene, camera);
-    scene.remove.apply(scene, components);
 };
 render();
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXJtLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiYXJtLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsa0NBQWdEO0FBQ2hELCtCQVFlO0FBQ2YsK0JBQW9DO0FBQ3BDLElBQUksQ0FBQyxHQUFHLElBQUksRUFDVixDQUFDLEdBQUcsR0FBRyxFQUNQLENBQUMsR0FBRyxJQUFJLEVBQ1IsS0FBSyxHQUFHLEVBQUUsQ0FBQztBQUNiLElBQU0sS0FBSyxHQUFHLFlBQUksRUFBRSxDQUFDO0FBQ2YsSUFBQTs7Ozs7RUFVSixFQVRBLGFBQUssRUFDTCxnQkFBUSxFQUNSLGNBQU0sRUFDTixVQUF3QyxFQUF0QywwQkFBVSxFQUFFLHdCQUFTLEVBQUUsa0JBQU0sRUFBRSxnQkFNakMsQ0FBQztBQUNILElBQUksWUFBWSxHQUFHLENBQUMsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQztBQUM3QixJQUFJLFVBQVUsR0FBRyxDQUFDLENBQUM7QUFDbkIsSUFBSSxXQUFXLEdBQUcsQ0FBQyxDQUFDO0FBQ3BCLElBQU0sUUFBUSxHQUFHLElBQUksbUJBQVcsQ0FBQyxFQUFFLEVBQUUsRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFDO0FBQzdDLElBQU0sUUFBUSxHQUFHLElBQUksMkJBQW1CLENBQUM7SUFDdkMsS0FBSyxFQUFFLFFBQVE7SUFDZixJQUFJLEVBQUUsa0JBQVU7Q0FDakIsQ0FBQyxDQUFDO0FBQ0gsSUFBTSxZQUFZLEdBQUcsSUFBSSwyQkFBbUIsQ0FBQztJQUMzQyxLQUFLLEVBQUUsUUFBUTtJQUNmLElBQUksRUFBRSxrQkFBVTtDQUNqQixDQUFDLENBQUM7QUFDSCxRQUFRLENBQUMsS0FBSyxDQUFDLENBQUMsRUFBRSxHQUFHLEVBQUUsR0FBRyxDQUFDLENBQUM7QUFDNUIsTUFBTSxDQUFDLGdCQUFnQixDQUFDLFNBQVMsRUFBRSxVQUFBLEVBQUU7SUFDbkMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxFQUFFLENBQUMsR0FBRyxD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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicGVyc3BlY3RpdmUuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJwZXJzcGVjdGl2ZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLGtDQU9rQjtBQUNsQiwrQkFBK0Q7QUFHL0QsK0JBQThCO0FBQzlCLElBQUksQ0FBQyxHQUFHLENBQUMsRUFDUCxDQUFDLEdBQUcsQ0FBQyxDQUFDO0FBRVIsZ0JBQVEsQ0FBQztJQUNQLGdCQUFnQixFQUFFLGtDQUFrQztJQUNwRCxpQkFBaUIsRUFBRSxtQ0FBbUM7SUFDdEQsbUJBQW1CLEVBQUUscUNBQXFDO0lBQzFELG9CQUFvQixFQUFFLHNDQUFzQztDQUM3RCxDQUFDLENBQUM7QUFFSCxNQUFNLENBQUMsZ0JBQWdCLENBQUMsU0FBUyxFQUFFLFVBQUEsQ0FBQztJQUNsQyxRQUFRLENBQUMsQ0FBQyxHQUFHLEVBQUU7UUFDZixLQUFLLFlBQVk7WUFDZixDQUFDLEdBQUcsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDO1lBQ3ZCLE1BQU07UUFDUixLQUFLLFNBQVM7WUFDWixDQUFDLEdBQUcsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDO1lBQ3ZCLE1BQU07UUFDUixLQUFLLFdBQVc7WUFDZCxDQUFDLEdBQUcsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDO1lBQ3ZCLE1BQU07UUFDUixLQUFLLFdBQVc7WUFDZCxDQUFDLEdBQUcsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDO1lBQ3ZCLE1BQU07S0FDUDtJQUNELE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLEdBQUcsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUM7QUFDM0IsQ0FBQyxDQUFDLENBQUM7QUFFRyxJQUFBOzs7OztFQVdMLEVBWE0sYUFBSyxFQUFFLGdCQUFRLEVBQUUsY0FBTSxFQUFFLGdCQVcvQixDQUFDO0FBRUYsSUFBTSxJQUFJLEdBQUc7SUFDWCxJQUFNLElBQUksR0FBRyxJQUFJLGFBQUssRUFBRSxDQUFDO0lBQ3pCLEtBQUssSUFBSSxDQUFDLEdBQUcsQ0FBQyxFQUFFLENBQUMsSUFBSSxFQUFFLEVBQUUsQ0FBQyxHQUFHLENBQUMsR0FBRyxFQUFFLEVBQUU7UUFDbkMsSUFBTSxLQUFLLEdBQUcsY0FBTSxDQUFDLENBQUMsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsQ0FBQyxFQUFFLENBQUMsQ0FBQyxFQUFFLEVBQUUsRUFBRSxDQUFDLENBQUMsQ0FBQyxFQUFFO1lBQzVDLEtBQUssRUFBRSxRQUFRO1NBQ2hCLENBQUMsQ0FBQztRQUNILElBQU0sS0FBSyxHQUFHLGNBQU0sQ0FBQyxDQUFDLENBQUMsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsRUFBRSxDQUFDLEVBQUUsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUMsRUFBRTtZQUM1QyxLQUFLLEVBQUUsUUFBUTtTQUNoQixDQUFDLENBQUM7UUFDSCxJQUFJLENBQUMsR0FBRyxDQUFDLEtBQUssRUFBRSxLQUFLLENBQUMsQ0FBQztLQUN4QjtJQUNELE9BQU8sSUFBSSxDQUFDO0FBQ2QsQ0FBQyxDQUFDO0FBRUYsSUFBTSxHQUFHLEdBQUcsSUFBSSxtQkFBVyxDQUFDLEVBQUUsRUFBRSxFQUFFLEVBQUUsRUFBRSxDQUFDLENBQUM7QUFDeEMsSUFBTSxHQUFHLEdBQUcsSUFBSSwyQkFBbUIsQ0FBQztJQUNsQyxLQUFLLEVBQUUsUUFBUTtDQUNoQixDQUFDLENBQUM7QUFDSCxJQUFNLEtBQUssR0FBRyxJQUFJLFlBQUksQ0FBQyxHQUFHLEVBQUUsR0FBRyxDQUFDLENBQUM7QUFDakMsS0FBSyxDQUFDLFFBQVEsQ0FBQyxHQUFHLENBQUMsQ0FBQyxHQUFHLENBQUMsR0FBRyxFQUFFLEVBQUUsQ0FBQyxHQUFHLENBQUMsR0FBRyxFQUFFLEVBQUUsQ0FBQyxDQUFDLENBQUM7QUFDOUMsSUFBTSxJQUFJLEdBQUcsSUFBSSxFQUFFLENBQUM7QUFDcEIsS0FBSyxDQUFDLEdBQUcsQ0FBQyxLQUFLLEVBQUUsSUFBSSxDQUFDLENBQUM7QUFDdkIsSUFBTSxNQUFNLEdBQUc7SUFDYixxQkFBcUIsQ0FBQyxNQUFNLENBQUMsQ0FBQztJQUM5QixLQUFLLENBQUMsUUFBUSxDQUFDLEdBQUcsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxHQUFHLEVBQUUsRUFBRSxDQUFDLEdBQUcsQ0FBQyxHQUFHLEVBQUUsRUFBRSxDQUFDLENBQUMsQ0FBQztJQUM5QyxRQUFRLENBQUMsTUFBTSxDQUFDLEtBQUssRUFBRSxNQUFNLENBQUMsQ0FBQztBQUNqQyxDQUFDLENBQUM7QUFFRixNQUFNLEVBQUUsQ0FBQyJ9
 
 /***/ }),
 
