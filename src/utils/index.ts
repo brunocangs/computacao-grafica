@@ -13,7 +13,7 @@ import {
   LineLoop
 } from 'three';
 import { LineBasicMaterialParameters } from 'three';
-export { init } from './init';
+export { init, initPerspective } from './init';
 
 export type Point2D = [number, number];
 export type Point3D = [number, number, number];
@@ -90,11 +90,38 @@ export const line3D = (
 
 export const degToRad = (deg: number) => (deg * Math.PI) / 180;
 
-export const lineLoop = (points: PointArray3D, options: LineBasicMaterialParameters) => {
+export const lineLoop = (
+  points: PointArray3D,
+  options: LineBasicMaterialParameters
+) => {
   const lineLoopGeometry = new Geometry();
   const lineLoopMaterial = new LineBasicMaterial(options);
   lineLoopGeometry.vertices.push(
-    ...points.map((coords) => new Vector3(...coords))
+    ...points.map(coords => new Vector3(...coords))
   );
   return new LineLoop(lineLoopGeometry, lineLoopMaterial);
-}
+};
+
+type KeyMap = {
+  [key: string]: string;
+};
+
+export const controls = (keyMap: KeyMap) => {
+  const keys = Object.keys(keyMap);
+  const instructionBlock = document.createElement('div');
+  instructionBlock.innerText = 'Controles:';
+  keys.forEach(key => {
+    const instruction = keyMap[key];
+    const paragraph = document.createElement('p');
+    paragraph.innerText = `${key} => ${instruction}`;
+    instructionBlock.appendChild(paragraph);
+  });
+  instructionBlock.style.padding = '6px 14px';
+  instructionBlock.style.position = 'fixed';
+  instructionBlock.style.top = '0';
+  instructionBlock.style.left = '0';
+  instructionBlock.style.backgroundColor = 'rgba(255,255,255,0.2)';
+  instructionBlock.style.color = 'white';
+  instructionBlock.style.fontFamily = 'sans-serif';
+  document.body.appendChild(instructionBlock);
+};

@@ -13,8 +13,13 @@ let colors = new Array(quantity).fill(null).map(() => Math.random() * 0xffffff);
 
 // Escutando cliques no teclado
 window.addEventListener('keydown', e => {
-  console.log(e.key);
   switch (e.key) {
+  case 'ArrowUp':
+    addVertex();
+    break;
+  case 'ArrowRight':
+    addPolygon();
+    break;
   case '-':
     fps = Math.max(15, fps / 2);
     break;
@@ -22,7 +27,6 @@ window.addEventListener('keydown', e => {
     fps = Math.min(60, fps * 2);
     break;
   }
-  console.log(fps);
 });
 
 const limitFps = (fps: number, callback: () => any) => {
@@ -51,6 +55,26 @@ const randomCoords = (limit: number, floor?: boolean): Point3D => {
       0
     ];
 };
+
+const addVertex = () => {
+  coordinates = coordinates.map(polygon => {
+    return polygon.concat([randomCoords(size, true)]);
+  });
+  speeds = speeds.map(speed => {
+    return speed.concat([randomCoords(3)]);
+  });
+  dots++;
+};
+
+const addPolygon = () => {
+  coordinates.push(
+    new Array(dots).fill(null).map(() => randomCoords(size, true))
+  );
+  speeds.push(new Array(dots).fill(null).map(() => randomCoords(3)));
+  colors.push(Math.random() * 0xffffff);
+  quantity++;
+};
+
 let coordinates = new Array(quantity)
   .fill(null)
   .map(() => new Array(dots).fill(null).map(() => randomCoords(size, true)));
