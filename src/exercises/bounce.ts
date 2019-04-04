@@ -16,6 +16,16 @@ let now = new Date();
 let after: null | Date = null;
 let accelY = -0.001;
 let fps = 60;
+let tick = 0;
+
+setInterval(() => {
+  x = 0;
+  y = 25;
+  speedX = 0.01;
+  speedY = 0;
+  accelY = -0.001;
+  tick = 0;
+}, 6000);
 controls({
   '-': 'Diminui FPS',
   '=': 'Aumenta FPS'
@@ -73,14 +83,13 @@ const circle = new Mesh(geo, mat);
 scene.add(circle);
 scene.add(axes());
 
-let tick = 0;
 const render = () => {
   requestAnimationFrame(render);
   after = new Date();
   limitFps(fps, () => {
     renderer.render(scene, camera);
   });
-  tick = tick + 0.1;
+  tick = tick + 0.2;
   circle.position.x = x = x + speedX * tick;
   circle.position.y = y = pos(tick);
 };

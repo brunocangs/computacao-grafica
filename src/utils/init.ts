@@ -9,9 +9,12 @@ type BoundingBox = {
   axisHeight: number;
 };
 type InitArgs = {
-  camera: {
+  camera?: {
     position: Point3D;
     lookAt: Point3D;
+  };
+  lights?: {
+    scale: number;
   };
 };
 export const init: (
@@ -36,7 +39,7 @@ export const init: (
 
   camera.position.set(0, 0, 100);
   camera.lookAt(0, 0, 0);
-  if (fields) {
+  if (fields && fields.camera) {
     camera.position.set(...fields.camera.position);
     camera.lookAt(...fields.camera.lookAt);
   }
@@ -49,9 +52,13 @@ export const init: (
   lights[1] = new PointLight(0xffffff, 1, 0);
   lights[2] = new PointLight(0xffffff, 1, 0);
 
-  lights[0].position.set(0, 200, 0);
-  lights[1].position.set(100, 200, 100);
-  lights[2].position.set(-100, -200, -100);
+  let scale = 1;
+  if (fields && fields.lights) {
+    scale = fields.lights.scale;
+  }
+  lights[0].position.set(0, 200 * scale, 0);
+  lights[1].position.set(100 * scale, 300 * scale, 100 * scale);
+  lights[2].position.set(-200 * scale, -200 * scale, -100 * scale);
 
   scene.add(lights[0]);
   scene.add(lights[1]);
@@ -84,7 +91,7 @@ export const initPerspective: (
 
   camera.position.set(100, 100, 100);
   camera.lookAt(0, 0, 0);
-  if (fields) {
+  if (fields && fields.camera) {
     camera.position.set(...fields.camera.position);
     camera.lookAt(...fields.camera.lookAt);
   }
@@ -96,10 +103,13 @@ export const initPerspective: (
   lights[0] = new PointLight(0xffffff, 1, 0);
   lights[1] = new PointLight(0xffffff, 1, 0);
   lights[2] = new PointLight(0xffffff, 1, 0);
-
-  lights[0].position.set(0, 200, 0);
-  lights[1].position.set(100, 300, 100);
-  lights[2].position.set(-200, -200, -100);
+  let scale = 1;
+  if (fields && fields.lights) {
+    scale = fields.lights.scale;
+  }
+  lights[0].position.set(0, 200 * scale, 0);
+  lights[1].position.set(100 * scale, 300 * scale, 100 * scale);
+  lights[2].position.set(-200 * scale, -200 * scale, -100 * scale);
 
   scene.add(lights[0]);
   scene.add(lights[1]);
