@@ -6,16 +6,18 @@
   "scripts": {
     "start": "NODE_ENV=development webpack-dev-server --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rm -rf dist && webpack",
+    "build": "rm -rf dist && webpack -p",
     "gh-pages": "rm -rf node_modules/gh-pages/.cache && gh-pages -d dist -a",
-    "deploy": "npm run build && npm run gh-pages"
+    "deploy": "NODE_ENV=production npm run build && npm run gh-pages"
   },
   "keywords": [],
   "author": "Bruno Cangussu",
   "license": "ISC",
   "dependencies": {
+    "@types/lodash.throttle": "^4.1.6",
     "gh-pages": "^2.0.1",
     "html-webpack-plugin": "^3.2.0",
+    "lodash.throttle": "^4.1.1",
     "three": "^0.102.1",
     "three-orbitcontrols-ts": "^0.1.2",
     "ts-loader": "^5.3.3",

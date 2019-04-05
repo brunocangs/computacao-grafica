@@ -1,7 +1,15 @@
-import { init, lineLoop, Point3D } from '../utils';
+import { init, lineLoop, Point3D, controls } from '../utils';
 import { Geometry, Vector3, Face3 } from 'three';
 import { LineBasicMaterial } from 'three';
 import { Object3D } from 'three';
+
+controls({
+  'Seta para a direita': 'Adiciona mais um polígono',
+  'Seta para cima': 'Adiciona um véric em cada polígono',
+  '-': 'Diminúi FPS',
+  '=': 'Aumenta FPS'
+});
+
 // Variáveis globais
 const size = 250;
 let after: null | Date = null;
@@ -90,6 +98,8 @@ const [
   { axisHeight, axisWidth, height, width }
 ] = init();
 
+document.body.appendChild(renderer.domElement);
+
 const material = new LineBasicMaterial({
   color: 0xff00ff
 });
@@ -135,10 +145,12 @@ const render = () => {
   after = new Date();
   // @ts-ignore
   requestAnimationFrame(render);
-  limitFps(fps, update);
+  update();
   const components = start();
   scene.add(...components);
-  renderer.render(scene, camera);
+  limitFps(fps, () => {
+    renderer.render(scene, camera);
+  });
   scene.remove(...components);
 };
 render();

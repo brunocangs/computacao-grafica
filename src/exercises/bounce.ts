@@ -53,6 +53,8 @@ const [
   }
 });
 
+document.body.appendChild(renderer.domElement);
+
 const limitFps = (fps: number, callback: () => any) => {
   const frameTime = 1000 / fps;
   if (after && after.getTime() - now.getTime() >= frameTime) {

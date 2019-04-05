@@ -20,13 +20,14 @@ type InitArgs = {
 export const init: (
   fields?: InitArgs
 ) => [Scene, WebGLRenderer, OrthographicCamera, BoundingBox] = fields => {
+  // Define altura e largura da tela, alem o tamanho dos eixos
   const width = window.innerWidth;
   const height = window.innerHeight;
   const axisWidth = width / 2;
   const axisHeight = height / 2;
+  // Cria e inicializa o renderizador
   let renderer = new WebGLRenderer({ antialias: true });
   renderer.setSize(width, height);
-  document.body.appendChild(renderer.domElement);
 
   let camera = new OrthographicCamera(
     -axisWidth,
@@ -85,7 +86,6 @@ export const initPerspective: (
   const axisHeight = height / 2;
   let renderer = new WebGLRenderer({ antialias: true });
   renderer.setSize(width, height);
-  document.body.appendChild(renderer.domElement);
 
   let camera = new PerspectiveCamera(fov, aspect, near, far);
 

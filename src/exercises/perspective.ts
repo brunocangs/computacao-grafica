@@ -12,7 +12,6 @@ import { LineBasicMaterial } from 'three';
 import { Group } from 'three';
 let x = 0,
   y = 0;
-
 controls({
   'Seta para cima': 'Move o cubo uma célula para cima',
   'Seta para baixo': 'Move o cubo uma célula para baixo',
@@ -50,6 +49,7 @@ const [scene, renderer, camera, viewport] = initPerspective(
     }
   }
 );
+document.body.appendChild(renderer.domElement);
 
 const grid = () => {
   const Grid = new Group();

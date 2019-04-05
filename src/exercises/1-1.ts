@@ -14,6 +14,7 @@ const [
   camera,
   { axisHeight, axisWidth, height, width }
 ] = init();
+document.body.appendChild(renderer.domElement);
 
 let currentScene = 0;
 

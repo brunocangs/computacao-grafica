@@ -10,6 +10,8 @@ const [
 ] = init();
 scene.add(axes());
 
+document.body.appendChild(renderer.domElement);
+
 let x0 = -axisWidth;
 
 const MAX_POINTS = 5000;

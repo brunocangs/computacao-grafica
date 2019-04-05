@@ -5,7 +5,7 @@ const exercisesDir = path.resolve(__dirname, 'src', 'exercises');
 const exercises = fs.readdirSync(exercisesDir);
 
 module.exports = {
-  mode: 'development',
+  mode: process.env.NODE_ENV,
   entry: exercises.reduce((prev, curr) => {
     prev[curr.split('.')[0]] = require.resolve(
       path.resolve(exercisesDir, curr)

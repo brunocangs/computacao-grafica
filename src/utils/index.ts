@@ -21,6 +21,7 @@ export type PointArray2D = [number, number][];
 export type PointArray3D = [number, number, number][];
 
 export const axes = () => {
+  // Cria 3 linhas, uma para cada eixo de -9999 a 9999 e as adiciona à um Group
   let xMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
   let yMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
   let zMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
@@ -88,6 +89,7 @@ export const line3D = (
   return line;
 };
 
+// Transforma graus para radianos
 export const degToRad = (deg: number) => (deg * Math.PI) / 180;
 
 export const lineLoop = (
@@ -106,6 +108,7 @@ type KeyMap = {
   [key: string]: string;
 };
 
+// Mapeia JSON de controles para interface
 export const controls = (keyMap: KeyMap) => {
   const keys = Object.keys(keyMap);
   const instructionBlock = document.createElement('div');
@@ -113,15 +116,17 @@ export const controls = (keyMap: KeyMap) => {
   keys.forEach(key => {
     const instruction = keyMap[key];
     const paragraph = document.createElement('p');
-    paragraph.innerText = `${key} => ${instruction}`;
+    paragraph.innerText = `${key}: ${instruction}`;
     instructionBlock.appendChild(paragraph);
   });
   instructionBlock.style.padding = '6px 14px';
   instructionBlock.style.position = 'fixed';
-  instructionBlock.style.top = '0';
-  instructionBlock.style.left = '0';
+  instructionBlock.style.bottom = '0';
+  instructionBlock.style.right = '0';
   instructionBlock.style.backgroundColor = 'rgba(255,255,255,0.2)';
   instructionBlock.style.color = 'white';
   instructionBlock.style.fontFamily = 'sans-serif';
+  instructionBlock.style.userSelect = 'none';
+  instructionBlock.style.textAlign = 'left';
   document.body.appendChild(instructionBlock);
 };

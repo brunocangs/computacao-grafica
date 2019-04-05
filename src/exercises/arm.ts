@@ -1,4 +1,4 @@
-import { init, axes, degToRad } from '../utils';
+import { init, axes, degToRad, controls } from '../utils';
 import {
   BoxGeometry,
   MeshBasicMaterial,
@@ -9,6 +9,13 @@ import {
   Object3D
 } from 'three';
 import { Mesh, Group } from 'three';
+controls({
+  '1, 2, 3': 'Seleciona parte do braço para mexer',
+  Q: 'Move braço selecionado para cima',
+  E: 'Move braço selecionado para baixo',
+  'Seta para cima': 'Abre a garra',
+  'Seta para baixo': 'Fecha a garra'
+});
 let x = 1300,
   y = 800,
   z = 1300,
@@ -25,6 +32,8 @@ const [
     lookAt: [0, 0, 0]
   }
 });
+document.body.appendChild(renderer.domElement);
+
 let armsRotation = [0, 0, 0];
 let currentArm = 0;
 let clawOpening = 0;
