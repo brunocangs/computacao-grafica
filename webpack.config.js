@@ -1,7 +1,6 @@
 const path = require('path');
 const Html = require('html-webpack-plugin');
 const fs = require('fs');
-
 const exercisesDir = path.resolve(__dirname, 'src', 'exercises');
 const exercises = fs.readdirSync(exercisesDir);
 
@@ -18,7 +17,7 @@ module.exports = {
     return new Html({
       title: 'Computação Gráfica',
       template: 'index.html',
-      chunks: [filename],
+      chunks: [filename, 'commons'],
       filename: filename === 'index' ? 'index.html' : `${filename}/index.html`
     });
   }),
@@ -40,10 +39,16 @@ module.exports = {
   resolve: {
     extensions: ['.json', '.ts', '.js']
   },
-  devtool: process.env.NODE_ENV === 'development' ? 'source-map' : '',
   devServer: {
     contentBase: path.join('/dist'),
     hot: true,
     port: 3000
+  },
+  optimization: {
+    splitChunks: {
+      name: () => 'commons',
+      minChunks: 2,
+      chunks: 'all'
+    }
   }
 };
