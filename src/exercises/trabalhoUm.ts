@@ -1,4 +1,4 @@
-import { init, axes, initPerspective } from '../utils';
+import { init, axes, initPerspective } from "../utils";
 import {
   OrthographicCamera,
   Mesh,
@@ -8,28 +8,29 @@ import {
   PlaneGeometry,
   MeshLambertMaterial,
   PointLight
-} from 'three';
-import { OrbitControls } from 'three-orbitcontrols-ts';
-import { CircleGeometry } from 'three';
-import throttle from 'lodash.throttle';
+} from "three";
+import { OrbitControls } from "three-orbitcontrols-ts";
+import { CircleGeometry } from "three";
+import throttle from "lodash.throttle";
+import { Group } from "three";
 // Sintaxe de desestruturação de vetor, dado que retorno é uma tupla de variáveis
 let [
-  ortScene,
+  zScene,
   renderer,
   camera,
   { axisHeight, axisWidth, height, width }
 ] = init();
 // Variáveis globais
 let depth = 1;
-let currentScene = 0;
+let currentGroup = 0;
 // Camera da primeira viewport
 const zCamera = new OrthographicCamera(-1, 1, 1, -1, -1000, 10000);
 // Camera da segunda viewport, com aspect ratio correto para meia tela
 const halfAspect = (width / 2 - 2) / height;
-const [perspScene, pRenderer, perspectiveCamera] = initPerspective(
+const [pScene, pRenderer, perspectiveCamera] = initPerspective(
   60,
   halfAspect,
-  0.1,
+  0.2,
   1000,
   // Cena da segunda viewport com luzes mais próximas e camera inicialmente em (2,2,2)
   {
@@ -42,23 +43,22 @@ const [perspScene, pRenderer, perspectiveCamera] = initPerspective(
     }
   }
 );
+// Adiciona eixos às cenas
+zScene.add(axes());
+pScene.add(axes());
 
-// Cria as tres cenas para poder alternar, poderia ser implementado com 3 `THREE.Group`s
-// e alterar em qual `Group` os elementos são inseridos e qual está na cena
-const ortScenes = [ortScene, ortScene.clone(true), ortScene.clone(true)];
-const perpsScenes = [
-  perspScene,
-  perspScene.clone(true),
-  perspScene.clone(true)
-];
-
-// Adiciona eixos a todas as cenas
-// Sintaxe de `spread`, equivale a ortScenes.concat(perpsScenes).forEach(...)
-[...ortScenes, ...perpsScenes].forEach(scene => scene.add(axes()));
-
-// Seleciona cenas atuais, inicial => indice 0
-let zScene = ortScenes[currentScene];
-let perspectiveScene = perpsScenes[currentScene];
+// Cria grupos de controle e adiciona às telas
+const perspectiveGroups = [new Group(), new Group(), new Group()];
+const ortogonalGroups = [new Group(), new Group(), new Group()];
+/**
+ * Sintaxe de spread de vetor para parametro. Equivale a
+ * zScene.add(ortogonalGroups[0], ortogonalGroups[1], ortogonalGroups[2])
+ * pScene.add(perspectiveGroups[0], perspectiveGroups[1], perspectiveGroups[2])
+ */
+zScene.add(...ortogonalGroups);
+pScene.add(...perspectiveGroups);
+let pGroup = perspectiveGroups[currentGroup];
+let zGroup = ortogonalGroups[currentGroup];
 
 // Controles para a camera com mouse. Importado de [OrbitControls](https://threejs.org/docs/#examples/controls/OrbitControls)
 const controls = new OrbitControls(
@@ -76,7 +76,7 @@ document.body.appendChild(renderer.domElement);
 
 // Atualizador do título
 const updateTitle = () => {
-  document.title = `Grupo: ${currentScene + 1} - Altura: ${depth}`;
+  document.title = `Grupo: ${currentGroup + 1} - Altura: ${depth}`;
 };
 
 // Loop de renderização
@@ -92,7 +92,7 @@ const render = () => {
   renderer.render(zScene, zCamera);
   // Viewport da camera em perpectiva de x / 2 + 1 até x - 1
   renderer.setViewport(width / 2 + 1, 1, width / 2 - 2, height);
-  renderer.render(perspectiveScene, perspectiveCamera);
+  renderer.render(pScene, perspectiveCamera);
 };
 render();
 
@@ -125,7 +125,12 @@ function onMouseDown(event: MouseEvent) {
        * 2 => Vermelho
        * 3 => Verde
        */
-      color: depth === 1 ? 0xffffff : depth === 2 ? 0xff0000 : 0x00ff00,
+      color:
+        currentGroup === 0
+          ? 0xffffff
+          : currentGroup === 1
+          ? 0xff0000
+          : 0x00ff00,
       side: DoubleSide
     });
     const circle = new Mesh(geo, mat);
@@ -138,9 +143,9 @@ function onMouseDown(event: MouseEvent) {
      * diferentes a seguir
      */
     circle.position.z = -0.3 * depth;
-    zScene.add(circle);
-    // Seleciona somente os pontos (ignora as 3 luzes e grupo dos eixos)
-    const dots = zScene.children.slice(5);
+    zGroup.add(circle);
+    // Seleciona os pontos dentro do grupo
+    const dots = zGroup.children;
     // Adiciona retangulo na segunda cena se a primeira contiver mais de dois pontos
     if (dots.length >= 2) {
       // slice(-2) => Pega ultimos 2 vertices
@@ -181,56 +186,55 @@ function onMouseDown(event: MouseEvent) {
         side: DoubleSide
       });
       var plane = new Mesh(geometry, material);
-      perspectiveScene.add(plane);
+      pGroup.add(plane);
     }
   }
 }
 
 const onRightClick = (e: MouseEvent) => {
   // Remove o ponto da primeira cena e deleta sua geometria
-  // Novamente ignora luzes e eixos
-  const dots = zScene.children.slice(5);
-  // Pega o ultimo elemento, slice retorna um vetor
+  const dots = zGroup.children;
+  // Pega o ultimo elemento, slice() retorna um vetor
   const lastChild = dots.slice(-1)[0] as Mesh;
   if (!lastChild) return;
-  zScene.remove(lastChild);
+  zGroup.remove(lastChild);
   // Deleta a geometria para liberar memória
   lastChild.geometry.dispose();
 
   // Remove plano da segunda cena e deleta sua geometria tal como acima
-  const planes = perspectiveScene.children.slice(5);
+  const planes = pGroup.children;
   // Conflitos de tipo
   const lastPlane = planes.slice(-1)[0] as Mesh;
   if (!lastPlane) return;
-  perspectiveScene.remove(lastPlane);
+  pGroup.remove(lastPlane);
   lastPlane.geometry.dispose();
 };
 
 const onKeydown = (e: KeyboardEvent) => {
   const key = e.key;
   switch (key) {
-  case 'ArrowLeft':
-    // Avança nas cenas e atualiza variável global
-    currentScene = (currentScene - 1 + 3) % 3;
-    zScene = ortScenes[currentScene];
-    perspectiveScene = perpsScenes[currentScene];
-    break;
-  case 'ArrowRight':
-    // Volta uma cena e atualiza variável global
-    currentScene = (currentScene + 1) % 3;
-    zScene = ortScenes[currentScene];
-    perspectiveScene = perpsScenes[currentScene];
-    break;
+    case "ArrowLeft":
+      // Avança nas cenas e atualiza variável global
+      currentGroup = (currentGroup - 1 + 3) % 3;
+      zGroup = ortogonalGroups[currentGroup];
+      pGroup = perspectiveGroups[currentGroup];
+      break;
+    case "ArrowRight":
+      // Volta uma cena e atualiza variável global
+      currentGroup = (currentGroup + 1) % 3;
+      zGroup = ortogonalGroups[currentGroup];
+      pGroup = perspectiveGroups[currentGroup];
+      break;
     // Casos abaixos alteram profundidade
-  case '1':
-    depth = 1;
-    break;
-  case '2':
-    depth = 2;
-    break;
-  case '3':
-    depth = 3;
-    break;
+    case "1":
+      depth = 1;
+      break;
+    case "2":
+      depth = 2;
+      break;
+    case "3":
+      depth = 3;
+      break;
   }
 };
 
@@ -256,6 +260,6 @@ const basicOnMouseWheel = (e: Event) => {
 // Limita chamadas de evento a 60 fps para scroll mais natural. Função importada de [lodash.throttle](https://lodash.com/docs/4.17.11#throttle)
 const onMouseWheel = throttle(basicOnMouseWheel, 1000 / 60);
 
-window.addEventListener('mousedown', onMouseDown, false);
-window.addEventListener('keydown', onKeydown, false);
-window.addEventListener('mousewheel', onMouseWheel, false);
+window.addEventListener("mousedown", onMouseDown, false);
+window.addEventListener("keydown", onKeydown, false);
+window.addEventListener("mousewheel", onMouseWheel, false);
