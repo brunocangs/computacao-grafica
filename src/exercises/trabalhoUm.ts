@@ -260,6 +260,16 @@ const basicOnMouseWheel = (e: Event) => {
 // Limita chamadas de evento a 60 fps para scroll mais natural. Função importada de [lodash.throttle](https://lodash.com/docs/4.17.11#throttle)
 const onMouseWheel = throttle(basicOnMouseWheel, 1000 / 60);
 
+const onWindowResize = () => {
+  height = window.innerHeight;
+  width = window.innerWidth;
+  const halfAspect = (width / 2 - 2) / height;
+  perspectiveCamera.aspect = halfAspect;
+  perspectiveCamera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+};
+
+window.addEventListener("resize", onWindowResize, false);
 window.addEventListener("mousedown", onMouseDown, false);
 window.addEventListener("keydown", onKeydown, false);
 window.addEventListener("mousewheel", onMouseWheel, false);
