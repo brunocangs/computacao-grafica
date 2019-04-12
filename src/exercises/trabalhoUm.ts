@@ -1,4 +1,4 @@
-import { init, axes, initPerspective } from "../utils";
+import { init, axes, initPerspective, degToRad } from "../utils";
 import {
   OrthographicCamera,
   Mesh,
@@ -13,6 +13,9 @@ import { OrbitControls } from "three-orbitcontrols-ts";
 import { CircleGeometry } from "three";
 import throttle from "lodash.throttle";
 import { Group } from "three";
+import { MeshPhongMaterial } from "three";
+import { PerspectiveCamera } from "three";
+import { Scene } from "three";
 // Sintaxe de desestruturação de vetor, dado que retorno é uma tupla de variáveis
 let [
   zScene,
@@ -27,22 +30,20 @@ let currentGroup = 0;
 const zCamera = new OrthographicCamera(-1, 1, 1, -1, -1000, 10000);
 // Camera da segunda viewport, com aspect ratio correto para meia tela
 const halfAspect = (width / 2 - 2) / height;
-const [pScene, pRenderer, perspectiveCamera] = initPerspective(
-  60,
+const perspectiveCamera = new PerspectiveCamera(60,
   halfAspect,
   0.2,
-  1000,
-  // Cena da segunda viewport com luzes mais próximas e camera inicialmente em (2,2,2)
-  {
-    camera: {
-      position: [2, 2, 2],
-      lookAt: [0, 0, 0]
-    },
-    lights: {
-      scale: 0.01
-    }
-  }
-);
+  1000);
+perspectiveCamera.position.set(1.3, 1.3, 1.3);
+perspectiveCamera.lookAt(0, 0, 0);
+const pScene = new Scene();
+const pLight = new PointLight(0xf0f0f0, 1, 20, 2);
+const pLight2 = new PointLight(0xcccccc, 1, 20, 2);
+pLight.position.copy(perspectiveCamera.position);
+pLight2.position.copy(pLight.position);
+pLight2.rotation.z = degToRad(120);
+pScene.add(pLight);
+pScene.add(pLight2);
 // Adiciona eixos às cenas
 zScene.add(axes());
 pScene.add(axes());
@@ -86,6 +87,8 @@ const render = () => {
   updateTitle();
   // Atualiza controles da camera e limpa buffers de cor
   controls.update();
+  pLight2.position.copy(pLight.position);
+  pLight.position.copy(perspectiveCamera.position);
   renderer.clear();
   // Viewport da camera ortográfica de x = 1 até x / 2 - 1
   renderer.setViewport(1, 1, width / 2 - 2, height);
@@ -129,8 +132,8 @@ function onMouseDown(event: MouseEvent) {
         currentGroup === 0
           ? 0xffffff
           : currentGroup === 1
-          ? 0xff0000
-          : 0x00ff00,
+            ? 0xff0000
+            : 0x00ff00,
       side: DoubleSide
     });
     const circle = new Mesh(geo, mat);
@@ -179,11 +182,14 @@ function onMouseDown(event: MouseEvent) {
       vertices[2].y = vertices[3].y = current.position.y;
       vertices[2].z = 0;
       vertices[3].z = current.position.z;
-
+      geometry.computeFaceNormals();
+      geometry.computeBoundingBox();
+      geometry.computeBoundingSphere();
       // Cria plano já reposicionado e adiciona à cena em perspectiva
-      var material = new MeshLambertMaterial({
+      var material = new MeshPhongMaterial({
         color: 0xffff00,
-        side: DoubleSide
+        side: DoubleSide,
+        flatShading: true
       });
       var plane = new Mesh(geometry, material);
       pGroup.add(plane);
