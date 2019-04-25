@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import {
   Shape,
   Vector2,
@@ -11,10 +11,10 @@ import {
   Line,
   Group,
   LineLoop
-} from 'three';
-import { LineBasicMaterialParameters } from 'three';
-export { init, initPerspective } from './init';
-
+} from "three";
+import { LineBasicMaterialParameters } from "three";
+export { init, initPerspective } from "./init";
+export * from "./io";
 export type Point2D = [number, number];
 export type Point3D = [number, number, number];
 export type PointArray2D = [number, number][];
@@ -111,22 +111,22 @@ type KeyMap = {
 // Mapeia JSON de controles para interface
 export const controls = (keyMap: KeyMap) => {
   const keys = Object.keys(keyMap);
-  const instructionBlock = document.createElement('div');
-  instructionBlock.innerText = 'Controles:';
+  const instructionBlock = document.createElement("div");
+  instructionBlock.innerText = "Controles:";
   keys.forEach(key => {
     const instruction = keyMap[key];
-    const paragraph = document.createElement('p');
+    const paragraph = document.createElement("p");
     paragraph.innerText = `${key}: ${instruction}`;
     instructionBlock.appendChild(paragraph);
   });
-  instructionBlock.style.padding = '6px 14px';
-  instructionBlock.style.position = 'fixed';
-  instructionBlock.style.bottom = '0';
-  instructionBlock.style.right = '0';
-  instructionBlock.style.backgroundColor = 'rgba(255,255,255,0.2)';
-  instructionBlock.style.color = 'white';
-  instructionBlock.style.fontFamily = 'sans-serif';
-  instructionBlock.style.userSelect = 'none';
-  instructionBlock.style.textAlign = 'left';
+  instructionBlock.style.padding = "6px 14px";
+  instructionBlock.style.position = "fixed";
+  instructionBlock.style.bottom = "0";
+  instructionBlock.style.right = "0";
+  instructionBlock.style.backgroundColor = "rgba(255,255,255,0.2)";
+  instructionBlock.style.color = "white";
+  instructionBlock.style.fontFamily = "sans-serif";
+  instructionBlock.style.userSelect = "none";
+  instructionBlock.style.textAlign = "left";
   document.body.appendChild(instructionBlock);
 };
