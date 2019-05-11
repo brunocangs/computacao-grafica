@@ -22,6 +22,7 @@
     "three": "^0.102.1",
     "three-orbitcontrols-ts": "^0.1.2",
     "three-ply-loader": "^1.0.0",
+    "three-ply-loader-ts": "^1.0.3",
     "ts-loader": "^5.3.3",
     "typescript": "^3.3.3333",
     "webpack": "^4.29.6",

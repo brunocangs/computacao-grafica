@@ -4633,6 +4633,13 @@ three-orbitcontrols-ts@^0.1.2:
   dependencies:
     three "^0.83.0"
 
+three-ply-loader-ts@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/three-ply-loader-ts/-/three-ply-loader-ts-1.0.3.tgz#308ab122b405fb1886e57a2e53f4f99da40c913e"
+  integrity sha512-hTbGhGIL0iH1Hv8fA6oN4pFrud37qGkH+03IaT6V79YMLpI4idHfT37Sp1NU6T5yn3cvFyMFoxSmvPRS4D8+Iw==
+  dependencies:
+    three "^0.102.1"
+
 three-ply-loader@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/three-ply-loader/-/three-ply-loader-1.0.0.tgz#dab2da78cef94968e0df20d0896463ffeb272cf9"
