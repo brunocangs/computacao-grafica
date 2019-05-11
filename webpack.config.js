@@ -39,7 +39,10 @@ module.exports = {
         use: {
           loader: "file-loader",
           options: {
-            publicPath: "/"
+            publicPath:
+              process.env.NODE_ENV === "development"
+                ? "/"
+                : "/computacao-grafica"
           }
         }
       }
