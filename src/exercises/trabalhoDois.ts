@@ -19,6 +19,7 @@ import throttle from "lodash.throttle";
 import { AmbientLight } from "three";
 import { Color } from "three";
 import Stats from "stats-js";
+import { DoubleSide } from "three";
 
 const stats = new Stats();
 const items = new Group();
@@ -62,10 +63,10 @@ const init = () => {
             geo.computeVertexNormals();
             geo.computeBoundingSphere();
             const mat = new MeshStandardMaterial({
-              color: new Color().setHSL(Math.random(), 0.6, 0.4),
-              emissive: new Color().setHSL(Math.random(), 1, 0.05),
-              metalness: 0.4 + Math.random() * 0.2,
-              roughness: 0.4 + Math.random() * 0.2
+              color: new Color().setHSL(Math.random(), 0.6, 0.3),
+              emissive: new Color().setHSL(0, 0, 0.1),
+              metalness: 0,
+              roughness: Math.random()
             });
             const mesh = new Mesh(geo, mat);
             mesh.visible = false;
@@ -93,11 +94,10 @@ const init = () => {
   camera.position.set(1, 1, 1);
   camera.lookAt(0, 0, 0);
   scene.add(camera);
-  light = new PointLight(0xffffff);
+  light = new PointLight(0xffffff, 2);
   const pos = camera.position.clone();
   light.position.set(pos.x, pos.y, pos.z);
   scene.add(light);
-  scene.add(new AmbientLight(0xffffff, 0.5));
   controls = new OrbitControls(camera, renderer.domElement, window);
   controls.enableDamping = true;
   controls.dampingFactor = 0.25;
