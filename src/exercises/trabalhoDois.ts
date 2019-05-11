@@ -9,6 +9,7 @@ import { MeshPhongMaterial } from "three";
 import { Mesh } from "three";
 import { PlaneBufferGeometry } from "three";
 import PlyLoader from "three-ply-loader-ts";
+import { MeshBasicMaterial } from "three";
 let renderer: WebGLRenderer,
   scene: Scene,
   camera: Camera,
@@ -47,7 +48,8 @@ const exercise = () => {
     geo.computeVertexNormals();
     geo.computeBoundingBox();
     geo.computeBoundingSphere();
-    const mesh = new Mesh(geo);
+    const mat = new MeshBasicMaterial({ color: 0xffffff });
+    const mesh = new Mesh(geo, mat);
     scene.add(mesh);
   });
 };
