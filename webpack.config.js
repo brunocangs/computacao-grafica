@@ -6,12 +6,13 @@ const exercises = fs.readdirSync(exercisesDir);
 
 module.exports = {
   mode: process.env.NODE_ENV,
-  entry: exercises.reduce((prev, curr) => {
-    prev[curr.split(".")[0]] = require.resolve(
-      path.resolve(exercisesDir, curr)
-    );
-    return prev;
-  }, {}),
+  entry: () =>
+    exercises.reduce((prev, curr) => {
+      prev[curr.split(".")[0]] = require.resolve(
+        path.resolve(exercisesDir, curr)
+      );
+      return prev;
+    }, {}),
   plugins: exercises.map(exercise => {
     const filename = exercise.split(".")[0];
     return new Html({

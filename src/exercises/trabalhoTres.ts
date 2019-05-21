@@ -8,16 +8,20 @@ import {
   Title,
   controls as instructions
 } from "../utils";
-import model1 from "../models/first/first.json";
-import model2 from "../models/first/second.json";
-import model3 from "../models/first/third.json";
 import {
   OrthographicCamera,
   Mesh,
   MeshBasicMaterial,
   Vector3,
   DoubleSide,
-  PointLight
+  PointLight,
+  PlaneBufferGeometry,
+  MeshStandardMaterial,
+  Color,
+  Euler,
+  PCFSoftShadowMap,
+  SphereGeometry,
+  ArrowHelper
 } from "three";
 import { OrbitControls } from "three-orbitcontrols-ts";
 import { CircleGeometry } from "three";
@@ -29,38 +33,147 @@ import { Scene } from "three";
 import { BoxGeometry } from "three";
 import { Object3D } from "three";
 import { Geometry } from "three";
-instructions({
+import PointerLock from "three-pointerlock-ts";
+import { AmbientLight } from "three";
+import { Clock } from "three";
+import PLYLoader from "three-ply-loader-ts";
+
+const loader = new PLYLoader();
+
+let selectedPly: number = 0;
+const plys = [
+  {
+    path: require("../models/ply/budda.ply"),
+    rotation: new Euler(Math.PI / 2, 0, 0),
+    translate: new Vector3(0, -0.055, 0),
+    front: new Vector3(0, -1, 0),
+    name: "Buda"
+  },
+  {
+    path: require("../models/ply/bunny.ply"),
+    rotation: new Euler(Math.PI / 2, 0, 0),
+    translate: new Vector3(0, -0.036, 0),
+    front: new Vector3(0, -1, 0),
+    name: "Coelho"
+  },
+  {
+    path: require("../models/ply/cow.ply"),
+    rotation: new Euler(Math.PI / 2, -Math.PI / 2, 0),
+    translate: new Vector3(0, 0, 0),
+    front: new Vector3(0, -1, 0),
+    name: "Vaca"
+  },
+  {
+    path: require("../models/ply/dragon.ply"),
+    rotation: new Euler(Math.PI / 2, 0, 0),
+    translate: new Vector3(0, -0.048, 0),
+    front: new Vector3(0, -1, 0),
+    name: "Dragão"
+  },
+  {
+    path: require("../models/ply/snowman.ply"),
+    rotation: new Euler(0, 0, 0),
+    translate: new Vector3(0.03, 0, 0.015),
+    front: new Vector3(0, -1, 0),
+    name: "Boneco de neve"
+  }
+];
+const plyMeshes: Group[] = [];
+const placedPlys: Group[] = [];
+plys.forEach((item, index) => {
+  loader.load(item.path, geo => {
+    geo.computeVertexNormals();
+    geo.computeBoundingSphere();
+    geo.computeBoundingBox();
+    const mesh = new Mesh(
+      geo,
+      new MeshStandardMaterial({
+        color: new Color().setHSL(
+          Math.random(),
+          0.3 + Math.random() * 0.2,
+          0.4 + Math.random() * 0.1
+        )
+      })
+    );
+    const scale = 0.1 / geo.boundingSphere.radius;
+    mesh.scale.setScalar(scale);
+    mesh.setRotationFromEuler(item.rotation);
+    mesh.translateX(item.translate.x);
+    mesh.translateY(item.translate.y);
+    mesh.translateZ(item.translate.z);
+    mesh.castShadow = true;
+    const g = new Group();
+    g.add(mesh);
+    plyMeshes[index] = g;
+  });
+});
+const addPly = (() => {
+  // const;
+  const modal = document.createElement("div");
+  modal.setAttribute(
+    "style",
+    "position: fixed; top: 0; bottom: 0; left: 0; right: 0; background-color: rgba(0,0,0,0.6); z-index: 99; display: none; flex-direction: column; align-items: center; justify-content: center"
+  );
+  const content = document.createElement("div");
+  content.setAttribute(
+    "style",
+    "padding: 12px 16px; background-color: #f0f0f0; font-family: sans-serif; color: black;"
+  );
+  content.innerText = "Selecione um ply";
+  modal.appendChild(content);
+  plys.forEach((ply, index) => {
+    const link = document.createElement("a");
+    link.href = "#";
+    link.innerText = ply.name;
+    link.style.display = "block";
+    link.onclick = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      selectedPly = index + 1;
+      modal.style.display = "none";
+    };
+    content.appendChild(link);
+  });
+  document.body.appendChild(modal);
+  return () => {
+    modal.style.display = "flex";
+  };
+})();
+const placePly = (x: number, y: number) => {
+  const group = plyMeshes[selectedPly - 1].clone(true);
+  group.position.set(x, y, 0);
+  pScene.add(group);
+  selectedPly = -selectedPly;
+  return group;
+};
+const orientPly = (group: Group, x: number, y: number) => {
+  // const children = group.children as Mesh[];
+  const index = -selectedPly - 1;
+  const direction = new Vector3(x, y)
+    .sub(group.position.clone().setZ(0))
+    .normalize();
+  let angle = plys[index].front.angleTo(direction);
+  if (x < group.position.x) {
+    angle = Math.PI + (Math.PI - angle);
+  }
+  group.rotation.z = angle;
+  group.userData.index = index;
+  group.userData.x = x;
+  group.userData.y = y;
+};
+const instructionElement = instructions({
   "Setas dir/esq": "Muda grupo selecionado",
   "Setas cima/baixo": "Altera profundidade da seção",
   ", e . ": "Altera largura da seção",
   "s ": "Salva modelo atual",
-  "l ": "Carrega um modelo salvo"
+  "l ": "Carrega um modelo salvo",
+  "m ": "Alterna entre modo de edição e visualização",
+  "p ": "Inserir um objeto PLY"
 });
-// Botões para carregar modelos
-const button1 = document.createElement("button");
-button1.innerText = "Modelo 1";
-button1.onclick = () => {
-  loadData(JSON.stringify(model1));
-};
-const button2 = document.createElement("button");
-button2.innerText = "Modelo 2";
-button2.onclick = () => {
-  loadData(JSON.stringify(model2));
-};
-const button3 = document.createElement("button");
-button3.innerText = "Modelo 3";
-button3.onclick = () => {
-  loadData(JSON.stringify(model3));
-};
-const wrapper = document.createElement("div");
-wrapper.appendChild(button1);
-wrapper.appendChild(button2);
-wrapper.appendChild(button3);
-wrapper.style.padding = "8px 6px";
-wrapper.style.position = "fixed";
-wrapper.style.top = "0";
-wrapper.style.right = "0";
-document.body.appendChild(wrapper);
+// Variáveis para movimento
+const direction = new Vector3();
+const clock = new Clock();
+let isNavigation = false;
 
 // Sintaxe de desestruturação de vetor, dado que retorno é uma tupla de variáveis
 let [
@@ -79,10 +192,62 @@ const zCamera = new OrthographicCamera(-1, 1, 1, -1, -1000, 10000);
 // Camera da segunda viewport, com aspect ratio correto para meia tela
 const halfAspect = (width / 2 - 2) / height;
 const perspectiveCamera = new PerspectiveCamera(60, halfAspect, 0.2, 1000);
+// Câmera e controles de primeira pessoa
+
+const fpCamera = new PerspectiveCamera(
+  60,
+  (width - 2) / (height - 2),
+  0.01,
+  1000
+);
+const fpControls = new PointerLock(fpCamera);
+const fpObject = fpControls.getObject();
+fpObject.position.set(0, -0.8, 0.05);
+fpObject.rotateX(degToRad(90));
+const fpLight1 = new PointLight(0xffffff, 1, 10, 2);
+fpLight1.castShadow = true;
+fpLight1.shadow.camera.near = 0.01;
+fpLight1.shadow.camera.far = 500;
+fpLight1.shadow.mapSize.width = 1024;
+fpLight1.shadow.mapSize.height = 1024;
+const fpBallLight1 = new Object3D();
+fpBallLight1.add(fpLight1);
+fpBallLight1.add(
+  new Mesh(
+    new SphereGeometry(0.01),
+    new MeshBasicMaterial({
+      color: 0xffffff
+    })
+  )
+);
+fpBallLight1.position.set(1, 0, 0.7);
+fpBallLight1.visible = false;
+const fpBallLight2 = new Object3D();
+fpBallLight2.add(fpLight1.clone(true));
+fpBallLight2.add(
+  new Mesh(
+    new SphereGeometry(0.01),
+    new MeshBasicMaterial({
+      color: 0xffffff
+    })
+  )
+);
+fpBallLight2.position.set(-1, 0, 0.4);
+fpBallLight2.visible = false;
+const plane = new Mesh(
+  new PlaneBufferGeometry(20, 20),
+  new MeshStandardMaterial({
+    color: 0xcccccc,
+    roughness: 1
+  })
+);
+plane.visible = false;
+plane.receiveShadow = true;
 perspectiveCamera.position.set(1.3, 1.3, 1.3);
 perspectiveCamera.lookAt(0, 0, 0);
 // Configura cena 3D com luzes posicionadas na camera e a 120 graus de rotacao dela
 const pScene = new Scene();
+pScene.add(new AmbientLight(0xffffff));
 const pLight = new PointLight(0xffffff, 1, 8, 2);
 const pLight2 = new PointLight(0xffffff, 1, 8, 2);
 pLight.position.copy(perspectiveCamera.position);
@@ -90,9 +255,14 @@ pLight2.position.copy(pLight.position);
 pLight2.rotation.z = degToRad(120);
 pScene.add(pLight);
 pScene.add(pLight2);
+pScene.add(fpControls.getObject());
+pScene.add(fpBallLight1);
+pScene.add(fpBallLight2);
+pScene.add(plane);
 // Adiciona eixos às cenas
 zScene.add(axes());
-pScene.add(axes());
+const pAxes = axes();
+pScene.add(pAxes);
 
 // Cria grupos de controle e adiciona às telas
 let perspectiveGroups = [new Group()];
@@ -119,25 +289,38 @@ controls.dampingFactor = 0.25;
 // Settings do renderizador
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.autoClear = false;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 // Loop de renderização
 const render = () => {
   requestAnimationFrame(render);
   title.set(
-    `Grupo: ${currentGroup + 1} - Profundidade: ${depth} - Largura: ${boxWidth}`
+    selectedPly !== 0
+      ? selectedPly < 0
+        ? "Clique novamente para orientar o objeto e esc para confirmar"
+        : `Clique para posicionar ${plys[selectedPly - 1].name}`
+      : `Grupo: ${currentGroup +
+          1} - Profundidade: ${depth} - Largura: ${boxWidth}`
   );
   // Atualiza controles da camera e limpa buffers de cor
   controls.update();
-  pLight2.position.copy(pLight.position);
-  pLight.position.copy(perspectiveCamera.position);
-  renderer.clear();
-  // Viewport da camera ortográfica de x = 1 até x / 2 - 1
-  renderer.setViewport(1, 1, width / 2 - 2, height);
-  renderer.render(zScene, zCamera);
-  // Viewport da camera em perpectiva de x / 2 + 1 até x - 1
-  renderer.setViewport(width / 2 + 1, 1, width / 2 - 2, height);
-  renderer.render(pScene, perspectiveCamera);
+  if (!isNavigation) {
+    pLight2.position.copy(pLight.position);
+    pLight.position.copy(perspectiveCamera.position);
+    renderer.clear();
+    // Viewport da camera ortográfica de x = 1 até x / 2 - 1
+    renderer.setViewport(1, 1, width / 2 - 2, height);
+    renderer.render(zScene, zCamera);
+    // Viewport da camera em perpectiva de x / 2 + 1 até x - 1
+    renderer.setViewport(width / 2 + 1, 1, width / 2 - 2, height);
+    renderer.render(pScene, perspectiveCamera);
+  } else {
+    doMovement();
+    renderer.setViewport(1, 1, width - 2, height - 2);
+    renderer.render(pScene, fpCamera);
+  }
 };
 render();
 
@@ -149,7 +332,6 @@ render();
 const addPoints = (points: [number, number, number, number][]) => {
   for (let point of points) {
     const [x, y, z, depth] = point;
-    console.log([x, y, z], depth);
     const geo = new CircleGeometry(0.01, 16);
     const mat = new MeshBasicMaterial({
       color: 0xffffff
@@ -185,12 +367,14 @@ const addPoints = (points: [number, number, number, number][]) => {
       positionVertices(geometry, current, previous, perpendicular, depth);
 
       // Cria plano já reposicionado e adiciona à cena em perspectiva
-      var material = new MeshPhongMaterial({
+      var material = new MeshStandardMaterial({
         color: 0xffff00,
         side: DoubleSide,
+        roughness: 1,
         flatShading: true
       });
       var box = new Mesh(geometry, material);
+      box.receiveShadow = true;
       pGroup.add(box);
     }
   }
@@ -392,7 +576,7 @@ const adjustPreviousBox = (cGeo: Geometry, prev: Object3D) => {
 // Salva a informação dos groupos e potos atuais como JSON
 const saveData = () => {
   // Group
-  const data = ortogonalGroups.map(group => {
+  const walls = ortogonalGroups.map(group => {
     return (
       group.children
         // Clique
@@ -403,7 +587,22 @@ const saveData = () => {
         .filter(item => item.length > 0)
     );
   });
-  download(data, "model.json");
+  const plys = placedPlys.map(item => {
+    return [
+      item.userData.index,
+      item.position.x,
+      item.position.y,
+      item.userData.x,
+      item.userData.y
+    ];
+  });
+  download(
+    {
+      walls,
+      plys
+    },
+    "model.json"
+  );
 };
 
 // Carrega a informação salva anteriormente para a lógica interna do programa
@@ -412,11 +611,17 @@ const loadData = (data: string) => {
     zScene.remove(ortogonalGroups[i]);
     pScene.remove(perspectiveGroups[i]);
   }
+  for (let grp of placedPlys) {
+    pScene.remove(grp);
+  }
   ortogonalGroups = [];
   perspectiveGroups = [];
   currentGroup = -1;
-  const dots = JSON.parse(data) as [number, number, number, number][][];
-  for (let group of dots) {
+  const { walls, plys } = JSON.parse(data) as {
+    walls: [number, number, number, number][][];
+    plys: [number, number, number, number, number][];
+  };
+  for (let group of walls) {
     const next = currentGroup + 1;
     ortogonalGroups.push(new Group());
     perspectiveGroups.push(new Group());
@@ -429,15 +634,84 @@ const loadData = (data: string) => {
     } else {
       updateGroups(next);
     }
-    boxWidth = depth;
+    boxWidth = depth || 1;
     addPoints(group);
+  }
+  for (let ply of plys) {
+    const [index, x, y, clickX, clickY] = ply;
+    selectedPly = index + 1;
+    placedPlys.push(placePly(x, y));
+    orientPly(placedPlys.slice(-1)[0], clickX, clickY);
   }
 };
 
+const switchMode = () => {
+  isNavigation = !isNavigation;
+  perspectiveCamera.aspect = isNavigation ? width / height : halfAspect;
+  perspectiveCamera.updateProjectionMatrix();
+  title.toggleVisibility();
+  instructionElement.style.visibility = isNavigation ? "hidden" : "visible";
+  controls.enabled = !isNavigation;
+  pAxes.children.forEach(child => (child.visible = !isNavigation));
+  plane.visible = !plane.visible;
+  fpBallLight1.visible = !fpBallLight1.visible;
+  fpBallLight2.visible = !fpBallLight2.visible;
+  pLight.visible = !pLight.visible;
+  pLight2.visible = !pLight2.visible;
+};
+fpControls.addEventListener("unlock", () => {
+  switchMode();
+});
+fpControls.addEventListener("lock", () => {
+  switchMode();
+});
+let moveForward = false;
+let moveLeft = false;
+let moveBack = false;
+let moveRight = false;
+const handleMovement = (key: string, bool: boolean) => {
+  switch (key) {
+    case "w":
+    case "ArrowUp":
+      moveForward = bool;
+      break;
+    case "s":
+    case "ArrowDown":
+      moveBack = bool;
+      break;
+    case "a":
+    case "ArrowLeft":
+      moveLeft = bool;
+      break;
+    case "d":
+    case "ArrowRight":
+      moveRight = bool;
+      break;
+  }
+};
+const doMovement = () => {
+  direction.z = Number(moveBack) - Number(moveForward);
+  direction.x = Number(moveRight) - Number(moveLeft);
+  const length = 0.02 * clock.getDelta() * 15;
+  direction.setLength(length);
+  // // Verifica colisao para frente
+  // let look = new Vector3();
+  // look = fpControls.getDirection();
+  // look.applyEuler(new Euler(Math.PI / 2, 0, 0));
+  // look.z = 0;
+  // look.normalize();
+  // // Look contem posição para frente
+  // const objects = perspectiveGroups.reduce<Object3D[]>((prev, curr) => {
+  //   return prev.concat(curr.children);
+  // }, []);
+  fpObject.translateX(direction.x);
+  fpObject.translateZ(direction.z);
+};
 // Eventos mouse/teclado
 
 // Clique na tela
 function onMouseDown(event: MouseEvent) {
+  if (isNavigation) return;
   /**
    * Botões (event.which):
    * 1 - Botão esquerdo
@@ -460,7 +734,15 @@ function onMouseDown(event: MouseEvent) {
      * o que aparece na tela é igual, porém facilita para construir os quadrados com alturas
      * diferentes a seguir
      */
-    addPoints([[x, y, 0.1 * depth, boxWidth]]);
+    if (selectedPly !== 0) {
+      if (selectedPly < 0) {
+        orientPly(placedPlys.slice(-1)[0], x, y);
+      } else {
+        placedPlys.push(placePly(x, y));
+      }
+    } else {
+      addPoints([[x, y, 0.1 * depth, boxWidth]]);
+    }
   }
 }
 
@@ -517,56 +799,81 @@ const updateGroups = (next: number) => {
 const onKeydown = (e: KeyboardEvent) => {
   e.stopPropagation();
   const key = e.key;
-  switch (key) {
-    case "ArrowLeft":
-      // Volta uma cena e atualiza variável global
-      const next =
-        // Controle de limite e evitando numero negativo
-        (currentGroup - 1 + perspectiveGroups.length) %
-        perspectiveGroups.length;
-      updateGroups(next);
-      break;
-    case "ArrowRight":
-      // Avança nas cenas e atualiza variável global
-      const nextR = currentGroup + 1;
-      if (nextR === perspectiveGroups.length) {
-        ortogonalGroups.push(new Group());
-        perspectiveGroups.push(new Group());
-      }
-      zScene.add(ortogonalGroups[nextR]);
-      pScene.add(perspectiveGroups[nextR]);
-      updateGroups(nextR);
-      break;
-    // Casos abaixos alteram profundidade
-    case "ArrowUp":
-      depth = ++depth % 10 || 1;
-      break;
-    case "ArrowDown":
-      depth = (--depth + 10) % 10 || 9;
-      break;
-    case ".":
-      boxWidth = ++boxWidth % 10 || 1;
-      break;
-    case ",":
-      boxWidth = (--boxWidth + 10) % 10 || 9;
-      break;
-    case "F12":
-      if (document.fullscreen) {
-        document.exitFullscreen();
-      } else {
-        document.documentElement.requestFullscreen();
-      }
-      break;
-    case "l":
-      upload().then(loadData);
-      break;
-    case "s":
-      saveData();
-      break;
+  if (selectedPly < 0) selectedPly = 0;
+  if (!isNavigation) {
+    switch (key) {
+      case "ArrowLeft":
+        // Volta uma cena e atualiza variável global
+        const next =
+          // Controle de limite e evitando numero negativo
+          (currentGroup - 1 + perspectiveGroups.length) %
+          perspectiveGroups.length;
+        updateGroups(next);
+        break;
+      case "ArrowRight":
+        // Avança nas cenas e atualiza variável global
+        const nextR = currentGroup + 1;
+        if (nextR === perspectiveGroups.length) {
+          ortogonalGroups.push(new Group());
+          perspectiveGroups.push(new Group());
+        }
+        zScene.add(ortogonalGroups[nextR]);
+        pScene.add(perspectiveGroups[nextR]);
+        updateGroups(nextR);
+        break;
+      // Casos abaixos alteram profundidade
+      case "ArrowUp":
+        depth = ++depth % 10 || 1;
+        break;
+      case "ArrowDown":
+        depth = (--depth + 10) % 10 || 9;
+        break;
+      case ".":
+        boxWidth = ++boxWidth % 10 || 1;
+        break;
+      case ",":
+        boxWidth = (--boxWidth + 10) % 10 || 9;
+        break;
+      case "F12":
+        e.preventDefault();
+        if (document.fullscreen) {
+          document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen();
+        }
+        break;
+      case "l":
+        upload().then(loadData);
+        break;
+      case "s":
+        saveData();
+        break;
+      case "m":
+        fpControls.lock();
+        break;
+      case "p":
+        addPly();
+        break;
+    }
+  } else {
+    switch (key) {
+      case "m":
+        fpControls.unlock();
+        break;
+      default:
+        handleMovement(key, true);
+    }
+  }
+};
+
+const onKeyup = (event: KeyboardEvent) => {
+  if (isNavigation) {
+    handleMovement(event.key, false);
   }
 };
 
 const basicOnMouseWheel = (e: Event) => {
+  if (isNavigation) return;
   // Obtem posições atuais da camera
   // Sintaxe de desconstrução de objeto. Equivale à
   /**
@@ -594,10 +901,13 @@ const onWindowResize = () => {
   const halfAspect = (width / 2 - 2) / height;
   perspectiveCamera.aspect = halfAspect;
   perspectiveCamera.updateProjectionMatrix();
+  fpCamera.aspect = (width - 2) / (height - 2);
+  fpCamera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 };
 
 window.addEventListener("resize", onWindowResize, false);
-window.addEventListener("mousedown", onMouseDown, false);
+renderer.domElement.addEventListener("mousedown", onMouseDown, false);
 window.addEventListener("keydown", onKeydown, false);
+window.addEventListener("keyup", onKeyup, false);
 window.addEventListener("mousewheel", onMouseWheel, false);

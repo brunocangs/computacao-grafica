@@ -129,4 +129,5 @@ export const controls = (keyMap: KeyMap) => {
   instructionBlock.style.userSelect = "none";
   instructionBlock.style.textAlign = "left";
   document.body.appendChild(instructionBlock);
+  return instructionBlock;
 };

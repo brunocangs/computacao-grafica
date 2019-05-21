@@ -46,4 +46,8 @@ export class Title {
   set(title: string) {
     this.title.innerText = title;
   }
+  toggleVisibility() {
+    this.title.style.visibility =
+      this.title.style.visibility === "hidden" ? "visible" : "hidden";
+  }
 }

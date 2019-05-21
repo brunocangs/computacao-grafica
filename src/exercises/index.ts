@@ -40,6 +40,7 @@ document.body.innerHTML = `
 <ul class='project-list'>
   <li><a href='${link("trabalhoUm")}'>Primeiro Trabalho</a></li>
   <li><a href='${link("trabalhoDois")}'>Segundo Trabalho</a></li>
+  <li><a href='${link("trabalhoTres")}'>Terceiro Trabalho</a></li>
 </ul>
 <h3>Exercícios:</h3>
 <ul class='project-list'>
