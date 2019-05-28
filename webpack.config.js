@@ -36,7 +36,7 @@ module.exports = {
         exclude: /node_modules/
       },
       {
-        test: /\.ply$/,
+        test: /\.(ply|png)$/,
         use: {
           loader: "file-loader",
           options: {

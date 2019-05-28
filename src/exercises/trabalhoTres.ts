@@ -20,14 +20,12 @@ import {
   Color,
   Euler,
   PCFSoftShadowMap,
-  SphereGeometry,
-  ArrowHelper
+  SphereGeometry
 } from "three";
 import { OrbitControls } from "three-orbitcontrols-ts";
 import { CircleGeometry } from "three";
 import throttle from "lodash.throttle";
 import { Group } from "three";
-import { MeshPhongMaterial } from "three";
 import { PerspectiveCamera } from "three";
 import { Scene } from "three";
 import { BoxGeometry } from "three";
@@ -37,45 +35,82 @@ import PointerLock from "three-pointerlock-ts";
 import { AmbientLight } from "three";
 import { Clock } from "three";
 import PLYLoader from "three-ply-loader-ts";
+import { CubeTextureLoader } from "three";
 
 const loader = new PLYLoader();
 
 let selectedPly: number = 0;
+
+const materials: MeshStandardMaterial[] = [
+  new MeshStandardMaterial({
+    color: new Color().setHSL(1 / 6, 1, 0.5),
+    roughness: 0.3,
+    side: DoubleSide
+  }),
+  new MeshStandardMaterial({
+    color: new Color().setHSL(316 / 360, 1, 0.4),
+    roughness: 0.2,
+    side: DoubleSide
+  }),
+  new MeshStandardMaterial({
+    color: new Color().setHSL(82 / 360, 0.9, 0.3),
+    roughness: 1,
+    metalness: 0.1,
+    side: DoubleSide
+  }),
+  new MeshStandardMaterial({
+    color: new Color().setHSL(28.9 / 360, 0.566, 0.461),
+    roughness: 0.6,
+    metalness: 0.1,
+    side: DoubleSide
+  }),
+  new MeshStandardMaterial({
+    color: new Color().setHSL(278 / 460, 0.42, 0.47),
+    roughness: 0.5,
+    side: DoubleSide
+  })
+];
+let currentMaterial = 0;
 const plys = [
   {
-    path: require("../models/ply/budda.ply"),
+    path: require("../models/third/street_lamp.ply"),
     rotation: new Euler(Math.PI / 2, 0, 0),
-    translate: new Vector3(0, -0.055, 0),
+    translate: new Vector3(0, 0.048, 0),
     front: new Vector3(0, -1, 0),
-    name: "Buda"
+    scale: 1.2,
+    name: "Poste"
   },
   {
-    path: require("../models/ply/bunny.ply"),
-    rotation: new Euler(Math.PI / 2, 0, 0),
-    translate: new Vector3(0, -0.036, 0),
-    front: new Vector3(0, -1, 0),
-    name: "Coelho"
-  },
-  {
-    path: require("../models/ply/cow.ply"),
-    rotation: new Euler(Math.PI / 2, -Math.PI / 2, 0),
-    translate: new Vector3(0, 0, 0),
-    front: new Vector3(0, -1, 0),
-    name: "Vaca"
-  },
-  {
-    path: require("../models/ply/dragon.ply"),
-    rotation: new Euler(Math.PI / 2, 0, 0),
-    translate: new Vector3(0, -0.048, 0),
-    front: new Vector3(0, -1, 0),
-    name: "Dragão"
-  },
-  {
-    path: require("../models/ply/snowman.ply"),
+    path: require("../models/third/trashcan.ply"),
     rotation: new Euler(0, 0, 0),
-    translate: new Vector3(0.03, 0, 0.015),
+    translate: new Vector3(0, 0, 0.02),
+    scale: 0.3,
     front: new Vector3(0, -1, 0),
-    name: "Boneco de neve"
+    name: "Lata de lixo"
+  },
+  {
+    path: require("../models/third/stratocaster.ply"),
+    rotation: new Euler(Math.PI / 2, 0, Math.PI / 4),
+    translate: new Vector3(0, 0.05, 0),
+    scale: 0.7,
+    front: new Vector3(0, -1, 0),
+    name: "Guitarra"
+  },
+  {
+    path: require("../models/third/mug.ply"),
+    rotation: new Euler(Math.PI / 2, 0, 0),
+    translate: new Vector3(0, 0, 0),
+    scale: 0.05,
+    front: new Vector3(0, -1, 0),
+    name: "Caneca"
+  },
+  {
+    path: require("../models/third/turbine.ply"),
+    rotation: new Euler(Math.PI / 2, 0, 0),
+    translate: new Vector3(0, 0.02, 0),
+    scale: 0.7,
+    front: new Vector3(0, -1, 0),
+    name: "Turbina"
   }
 ];
 const plyMeshes: Group[] = [];
@@ -90,17 +125,19 @@ plys.forEach((item, index) => {
       new MeshStandardMaterial({
         color: new Color().setHSL(
           Math.random(),
-          0.3 + Math.random() * 0.2,
-          0.4 + Math.random() * 0.1
-        )
+          0.3 + Math.random() * 0.3,
+          0.3 + Math.random() * 0.3
+        ),
+        roughness: Math.random(),
+        metalness: Math.random() * 0.3
       })
     );
-    const scale = 0.1 / geo.boundingSphere.radius;
-    mesh.scale.setScalar(scale);
+    const scale = (item.scale * 0.1) / geo.boundingSphere.radius;
     mesh.setRotationFromEuler(item.rotation);
     mesh.translateX(item.translate.x);
     mesh.translateY(item.translate.y);
     mesh.translateZ(item.translate.z);
+    mesh.scale.setScalar(scale);
     mesh.castShadow = true;
     const g = new Group();
     g.add(mesh);
@@ -162,6 +199,7 @@ const orientPly = (group: Group, x: number, y: number) => {
   group.userData.y = y;
 };
 const instructionElement = instructions({
+  "1 a 5 ": "Materiais de grupo",
   "Setas dir/esq": "Muda grupo selecionado",
   "Setas cima/baixo": "Altera profundidade da seção",
   ", e . ": "Altera largura da seção",
@@ -235,7 +273,7 @@ fpBallLight2.add(
 fpBallLight2.position.set(-1, 0, 0.4);
 fpBallLight2.visible = false;
 const plane = new Mesh(
-  new PlaneBufferGeometry(20, 20),
+  new PlaneBufferGeometry(20, 20, 1, 1),
   new MeshStandardMaterial({
     color: 0xcccccc,
     roughness: 1
@@ -302,7 +340,7 @@ const render = () => {
         ? "Clique novamente para orientar o objeto e esc para confirmar"
         : `Clique para posicionar ${plys[selectedPly - 1].name}`
       : `Grupo: ${currentGroup +
-          1} - Profundidade: ${depth} - Largura: ${boxWidth}`
+          1} - Profundidade: ${depth} - Largura: ${boxWidth} - Material ${currentMaterial}`
   );
   // Atualiza controles da camera e limpa buffers de cor
   controls.update();
@@ -362,18 +400,13 @@ const addPoints = (points: [number, number, number, number][]) => {
         current.position
       );
       // Cria uma nova caixa na origem
-      let geometry = new BoxGeometry(1, 1, 1);
+      let geometry = new BoxGeometry(1, 1, 1, 1, 1);
       // Reposiciona vérices na posição desejada
       positionVertices(geometry, current, previous, perpendicular, depth);
 
       // Cria plano já reposicionado e adiciona à cena em perspectiva
-      var material = new MeshStandardMaterial({
-        color: 0xffff00,
-        side: DoubleSide,
-        roughness: 1,
-        flatShading: true
-      });
-      var box = new Mesh(geometry, material);
+      let material = materials[currentMaterial].clone();
+      let box = new Mesh(geometry, material);
       box.receiveShadow = true;
       pGroup.add(box);
     }
@@ -770,27 +803,27 @@ const onRightClick = (e: MouseEvent) => {
  * @param next Indice do próximo grupo
  */
 const updateGroups = (next: number) => {
-  const prev = currentGroup;
-  ortogonalGroups[prev].children.forEach(child => {
-    const obj = child as Mesh;
-    const mat = obj.material as MeshPhongMaterial;
-    mat.color.setHSL(0, 0, 0.2);
-  });
-  ortogonalGroups[next].children.forEach(child => {
-    const obj = child as Mesh;
-    const mat = obj.material as MeshPhongMaterial;
-    mat.color.setHSL(0, 0, 1);
-  });
-  perspectiveGroups[prev].children.forEach(child => {
-    const obj = child as Mesh;
-    const mat = obj.material as MeshPhongMaterial;
-    mat.color.setHSL(60 / 360, 1, 0.2);
-  });
-  perspectiveGroups[next].children.forEach(child => {
-    const obj = child as Mesh;
-    const mat = obj.material as MeshPhongMaterial;
-    mat.color.setHex(0xffff00);
-  });
+  // const prev = currentGroup;
+  // ortogonalGroups[prev].children.forEach(child => {
+  //   const obj = child as Mesh;
+  //   const mat = obj.material as MeshPhongMaterial;
+  //   mat.color.setHSL(0, 0, 0.2);
+  // });
+  // ortogonalGroups[next].children.forEach(child => {
+  //   const obj = child as Mesh;
+  //   const mat = obj.material as MeshPhongMaterial;
+  //   mat.color.setHSL(0, 0, 1);
+  // });
+  // perspectiveGroups[prev].children.forEach(child => {
+  //   const obj = child as Mesh;
+  //   const mat = obj.material as MeshPhongMaterial;
+  //   mat.color.setHSL(60 / 360, 1, 0.2);
+  // });
+  // perspectiveGroups[next].children.forEach(child => {
+  //   const obj = child as Mesh;
+  //   const mat = obj.material as MeshPhongMaterial;
+  //   mat.color.setHex(0xffff00);
+  // });
   zGroup = ortogonalGroups[next];
   pGroup = perspectiveGroups[next];
   currentGroup = next;
@@ -853,6 +886,20 @@ const onKeydown = (e: KeyboardEvent) => {
         break;
       case "p":
         addPly();
+        break;
+      case "1":
+      case "2":
+      case "3":
+      case "4":
+      case "5":
+        currentMaterial = Number(key) - 1;
+        // @ts-ignore
+        console.log(materials[currentMaterial].color);
+        for (let child of pGroup.children as Mesh[]) {
+          const material = child.material as MeshStandardMaterial;
+          material.copy(materials[currentMaterial].clone());
+          material.needsUpdate = true;
+        }
         break;
     }
   } else {
