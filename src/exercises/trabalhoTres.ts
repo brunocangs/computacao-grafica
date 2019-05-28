@@ -20,7 +20,8 @@ import {
   Color,
   Euler,
   PCFSoftShadowMap,
-  SphereGeometry
+  SphereGeometry,
+  Raycaster
 } from "three";
 import { OrbitControls } from "three-orbitcontrols-ts";
 import { CircleGeometry } from "three";
@@ -35,7 +36,37 @@ import PointerLock from "three-pointerlock-ts";
 import { AmbientLight } from "three";
 import { Clock } from "three";
 import PLYLoader from "three-ply-loader-ts";
-import { CubeTextureLoader } from "three";
+import { Ray } from "three";
+import { ArrowHelper } from "three";
+import { Face3 } from "three";
+const model1 = require("../models/third/first.json");
+const model2 = require("../models/third/second.json");
+const model3 = require("../models/third/third.json");
+// Botões para carregar modelos
+const button1 = document.createElement("button");
+button1.innerText = "Modelo 1";
+button1.onclick = () => {
+  loadData(JSON.stringify(model1));
+};
+const button2 = document.createElement("button");
+button2.innerText = "Modelo 2";
+button2.onclick = () => {
+  loadData(JSON.stringify(model2));
+};
+const button3 = document.createElement("button");
+button3.innerText = "Modelo 3";
+button3.onclick = () => {
+  loadData(JSON.stringify(model3));
+};
+const wrapper = document.createElement("div");
+wrapper.appendChild(button1);
+wrapper.appendChild(button2);
+wrapper.appendChild(button3);
+wrapper.style.padding = "8px 6px";
+wrapper.style.position = "fixed";
+wrapper.style.top = "0";
+wrapper.style.right = "0";
+document.body.appendChild(wrapper);
 
 const loader = new PLYLoader();
 
@@ -45,29 +76,29 @@ const materials: MeshStandardMaterial[] = [
   new MeshStandardMaterial({
     color: new Color().setHSL(1 / 6, 1, 0.5),
     roughness: 0.3,
-    side: DoubleSide
+    flatShading: true
   }),
   new MeshStandardMaterial({
     color: new Color().setHSL(316 / 360, 1, 0.4),
     roughness: 0.2,
-    side: DoubleSide
+    flatShading: true
   }),
   new MeshStandardMaterial({
     color: new Color().setHSL(82 / 360, 0.9, 0.3),
     roughness: 1,
     metalness: 0.1,
-    side: DoubleSide
+    flatShading: true
   }),
   new MeshStandardMaterial({
     color: new Color().setHSL(28.9 / 360, 0.566, 0.461),
     roughness: 0.6,
     metalness: 0.1,
-    side: DoubleSide
+    flatShading: true
   }),
   new MeshStandardMaterial({
     color: new Color().setHSL(278 / 460, 0.42, 0.47),
     roughness: 0.5,
-    side: DoubleSide
+    flatShading: true
   })
 ];
 let currentMaterial = 0;
@@ -114,7 +145,7 @@ const plys = [
   }
 ];
 const plyMeshes: Group[] = [];
-const placedPlys: Group[] = [];
+let placedPlys: Group[] = [];
 plys.forEach((item, index) => {
   loader.load(item.path, geo => {
     geo.computeVertexNormals();
@@ -179,12 +210,14 @@ const addPly = (() => {
 const placePly = (x: number, y: number) => {
   const group = plyMeshes[selectedPly - 1].clone(true);
   group.position.set(x, y, 0);
+  group.userData.index = selectedPly - 1;
   pScene.add(group);
   selectedPly = -selectedPly;
   return group;
 };
 const orientPly = (group: Group, x: number, y: number) => {
   // const children = group.children as Mesh[];
+  if (!x || !y) return;
   const index = -selectedPly - 1;
   const direction = new Vector3(x, y)
     .sub(group.position.clone().setZ(0))
@@ -242,7 +275,7 @@ const fpControls = new PointerLock(fpCamera);
 const fpObject = fpControls.getObject();
 fpObject.position.set(0, -0.8, 0.05);
 fpObject.rotateX(degToRad(90));
-const fpLight1 = new PointLight(0xffffff, 1, 10, 2);
+const fpLight1 = new PointLight(0xffffff, 0.7, 10, 2);
 fpLight1.castShadow = true;
 fpLight1.shadow.camera.near = 0.01;
 fpLight1.shadow.camera.far = 500;
@@ -330,7 +363,6 @@ renderer.autoClear = false;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
-
 // Loop de renderização
 const render = () => {
   requestAnimationFrame(render);
@@ -340,7 +372,8 @@ const render = () => {
         ? "Clique novamente para orientar o objeto e esc para confirmar"
         : `Clique para posicionar ${plys[selectedPly - 1].name}`
       : `Grupo: ${currentGroup +
-          1} - Profundidade: ${depth} - Largura: ${boxWidth} - Material ${currentMaterial}`
+          1} - Profundidade: ${depth} - Largura: ${boxWidth} - Material: ${currentMaterial +
+          1}`
   );
   // Atualiza controles da camera e limpa buffers de cor
   controls.update();
@@ -429,19 +462,6 @@ const getPerpendicular = (previous: Vector3, current: Vector3): Vector3 => {
   return perpendicular;
 };
 
-/**
- * Disposição dos vérices na geometria é:
- *                     ^ y
- *    4---1            | /
- *   /|  /|            |/
- *  5---0 3        ----/----> x
- *  | / |/            /|
- *  7---2            z |
- *
- * 6 'abaixo' de 4
- *
- * Utiliza 0-3 como base e extrude 4-7
- */
 // Posiciona face frontal em Z = 0
 const positionVertices = (
   geometry: Geometry,
@@ -460,17 +480,17 @@ const positionVertices = (
   // Base de cima
   vertices[0].x = previous.position.x + perpendicular.x * depth;
   vertices[0].y = previous.position.y + perpendicular.y * depth;
-  vertices[0].z = 0;
+  vertices[0].z = previous.position.z;
   vertices[5].x = previous.position.x - perpendicular.x * depth;
   vertices[5].y = previous.position.y - perpendicular.y * depth;
-  vertices[5].z = 0;
+  vertices[5].z = previous.position.z;
   // Base de baixo
   vertices[2].x = current.position.x + perpendicular.x * depth;
   vertices[2].y = current.position.y + perpendicular.y * depth;
-  vertices[2].z = 0;
+  vertices[2].z = current.position.z;
   vertices[7].x = current.position.x - perpendicular.x * depth;
   vertices[7].y = current.position.y - perpendicular.y * depth;
-  vertices[7].z = 0;
+  vertices[7].z = current.position.z;
   /**
    *    4-prv-1  Face anterior
    *    |  |  |
@@ -481,17 +501,17 @@ const positionVertices = (
   // Base de cima
   vertices[1].x = previous.position.x + perpendicular.x * depth;
   vertices[1].y = previous.position.y + perpendicular.y * depth;
-  vertices[1].z = previous.position.z;
+  vertices[1].z = 0;
   vertices[4].x = previous.position.x - perpendicular.x * depth;
   vertices[4].y = previous.position.y - perpendicular.y * depth;
-  vertices[4].z = previous.position.z;
+  vertices[4].z = 0;
   // Base de baixo
   vertices[3].x = current.position.x + perpendicular.x * depth;
   vertices[3].y = current.position.y + perpendicular.y * depth;
-  vertices[3].z = current.position.z;
+  vertices[3].z = 0;
   vertices[6].x = current.position.x - perpendicular.x * depth;
   vertices[6].y = current.position.y - perpendicular.y * depth;
-  vertices[6].z = current.position.z;
+  vertices[6].z = 0;
   geometry.computeFaceNormals();
   geometry.computeBoundingBox();
   adjustPreviousBox(geometry, previous);
@@ -546,6 +566,7 @@ const checkLineIntersection = (
 };
 
 // Extende as faces até seu ponto de interseção para evitar mudanças estranhas
+
 const adjustPreviousBox = (cGeo: Geometry, prev: Object3D) => {
   const [prevBox] = pGroup.children.slice(-1) as Mesh[];
   if (!prevBox) return;
@@ -574,33 +595,42 @@ const adjustPreviousBox = (cGeo: Geometry, prev: Object3D) => {
     cVert[5].x + cDir.x,
     cVert[5].y + cDir.y
   );
-  pVert[3].set(
-    ...(pVert[2]
-      .set(...intersect02)
+  /**
+   * Disposição dos vérices na geometria é:
+   *                     ^ y
+   *    4---1            | /
+   *   /|  /|            |/
+   *  5---0 3        ----/----> x
+   *  | / |/            /|
+   *  7---2            z |
+   *
+   * 6 'abaixo' de 4
+   *
+   * Utiliza 0-3 como base e extrude 4-7
+   */
+  pVert[3].copy(
+    pVert[2]
+      .set(intersect02[0], intersect02[1], pVert[2].z)
       .clone()
       .setZ(pVert[3].z)
-      .toArray() as Point3D)
   );
-  pVert[6].set(
-    ...(pVert[7]
-      .set(...intersect57)
+  pVert[6].copy(
+    pVert[7]
+      .set(intersect57[0], intersect57[1], pVert[7].z)
       .clone()
       .setZ(pVert[6].z)
-      .toArray() as Point3D)
   );
-  cVert[1].set(
-    ...(cVert[0]
-      .set(...intersect02)
+  cVert[1].copy(
+    cVert[0]
+      .set(intersect02[0], intersect02[1], cVert[0].z)
       .clone()
       .setZ(cVert[1].z)
-      .toArray() as Point3D)
   );
-  cVert[4].set(
-    ...(cVert[5]
-      .set(...intersect57)
+  cVert[4].copy(
+    cVert[5]
+      .set(intersect57[0], intersect57[1], cVert[5].z)
       .clone()
       .setZ(cVert[4].z)
-      .toArray() as Point3D)
   );
   pGeo.verticesNeedUpdate = true;
   pGeo.computeBoundingBox();
@@ -655,6 +685,7 @@ const loadData = (data: string) => {
   }
   ortogonalGroups = [];
   perspectiveGroups = [];
+  placedPlys = [];
   currentGroup = -1;
   const { walls, plys } = JSON.parse(data) as {
     walls: [number, number, number, number, number][][];
@@ -729,20 +760,53 @@ const handleMovement = (key: string, bool: boolean) => {
   }
 };
 const doMovement = () => {
+  const length = 0.02 * clock.getDelta() * 15;
   direction.z = Number(moveBack) - Number(moveForward);
   direction.x = Number(moveRight) - Number(moveLeft);
-  const length = 0.02 * clock.getDelta() * 15;
+  console.log(direction.z, direction.x);
+  const look = fpControls.getDirection();
+  look.applyEuler(new Euler(Math.PI / 2));
+  look.setZ(0);
+  /**
+   *  Valores de X e Z em direction pro movimento
+   *            z (Frente)
+   *            | -1
+   *            |
+   *     -1 --------- 1 x (Direita)
+   *            |
+   *            |
+   *               1
+   */
+  if (direction.z === -1 && direction.x === 1) {
+    look.applyEuler(new Euler(0, 0, -Math.PI / 4));
+  } else if (direction.z === 0 && direction.x === 1) {
+  }
   direction.setLength(length);
-  // // Verifica colisao para frente
-  // let look = new Vector3();
-  // look = fpControls.getDirection();
-  // look.applyEuler(new Euler(Math.PI / 2, 0, 0));
-  // look.z = 0;
-  // look.normalize();
   // // Look contem posição para frente
   // const objects = perspectiveGroups.reduce<Object3D[]>((prev, curr) => {
   //   return prev.concat(curr.children);
   // }, []);
+  // let ray = new Raycaster(fpObject.position, direction.clone(), 0.02, length * 2);
+  // // Angulo de rotação Phi (cima/baixo)
+  // collision: for (let phi = -90; phi < 90; phi = phi + 10) {
+  //   // Angulo de rotação Theta (direita/esquerda)
+  //   for (let theta = -90; theta < 90; theta = theta + 10) {
+  //     // Itera por todos os angulos (gera meio circulo a frente da direção do movimento)
+  //     const angle = direction.clone().applyEuler(new Euler(phi, theta));
+  //     ray.set(fpObject.position, angle);
+  //     const intersect = ray.intersectObjects(objects);
+  //     if (intersect.length > 0) {
+  //       console.log(intersect);
+  //       const face = intersect[0].face as Face3;
+  //       const collisionAngle = direction
+  //         .clone()
+  //         .angleTo(face.normal.clone().setY(0));
+  //       console.log(direction.cross(face.normal));
+  //       direction.applyEuler(new Euler(0, -(Math.PI - collisionAngle)));
+  //       break collision;
+  //     }
+  //   }
+  // }
   fpObject.translateX(direction.x);
   fpObject.translateZ(direction.z);
 };

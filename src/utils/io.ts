@@ -41,6 +41,7 @@ export class Title {
     this.title.style.fontSize = "2em";
     this.title.style.color = "white";
     this.title.innerText = title;
+    this.title.style.pointerEvents = "none";
     document.body.appendChild(this.title);
   }
   set(title: string) {
