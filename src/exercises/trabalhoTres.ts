@@ -367,9 +367,10 @@ render();
  * Criado para facilitar carregar arquivo para T1
  * @param points Vetor de pontos com [x,y,z]
  */
-const addPoints = (points: [number, number, number, number][]) => {
+const addPoints = (points: [number, number, number, number, number][]) => {
   for (let point of points) {
-    const [x, y, z, depth] = point;
+    const [x, y, z, depth, matIndex] = point;
+    currentMaterial = matIndex;
     const geo = new CircleGeometry(0.01, 16);
     const mat = new MeshBasicMaterial({
       color: 0xffffff
@@ -378,6 +379,7 @@ const addPoints = (points: [number, number, number, number][]) => {
     // Posiciona círculo no click e adiciona à tela
     // @ts-ignore
     circle.width = depth;
+    circle.userData.material = currentMaterial;
     circle.position.x = x;
     circle.position.y = y;
     circle.position.z = z;
@@ -614,8 +616,12 @@ const saveData = () => {
       group.children
         // Clique
         .map(dot => {
-          // @ts-ignore
-          return [...dot.position.toArray(), dot.width];
+          return [
+            ...dot.position.toArray(),
+            // @ts-ignore
+            dot.width,
+            dot.userData.material
+          ];
         })
         .filter(item => item.length > 0)
     );
@@ -651,7 +657,7 @@ const loadData = (data: string) => {
   perspectiveGroups = [];
   currentGroup = -1;
   const { walls, plys } = JSON.parse(data) as {
-    walls: [number, number, number, number][][];
+    walls: [number, number, number, number, number][][];
     plys: [number, number, number, number, number][];
   };
   for (let group of walls) {
@@ -774,7 +780,7 @@ function onMouseDown(event: MouseEvent) {
         placedPlys.push(placePly(x, y));
       }
     } else {
-      addPoints([[x, y, 0.1 * depth, boxWidth]]);
+      addPoints([[x, y, 0.1 * depth, boxWidth, currentMaterial]]);
     }
   }
 }
@@ -893,12 +899,13 @@ const onKeydown = (e: KeyboardEvent) => {
       case "4":
       case "5":
         currentMaterial = Number(key) - 1;
-        // @ts-ignore
-        console.log(materials[currentMaterial].color);
         for (let child of pGroup.children as Mesh[]) {
           const material = child.material as MeshStandardMaterial;
           material.copy(materials[currentMaterial].clone());
           material.needsUpdate = true;
+        }
+        for (let child of zGroup.children as Mesh[]) {
+          child.userData.material = currentMaterial;
         }
         break;
     }
