@@ -50,6 +50,7 @@ document.body.innerHTML = `
   <li><a href='${link("bounce")}'>Bola quicando</a></li>
   <li><a href='${link("perspective")}'>Cubo em perspectiva</a></li>
   <li><a href='${link("basicAnimation")}'>Animação de senoide</a></li>
+  <li><a href='${link("textures")}'>Texturas</a></li>
 </ul>
 </div>
 `;
