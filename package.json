@@ -22,7 +22,7 @@
     "lodash.throttle": "^4.1.1",
     "react-slick": "^0.24.0",
     "stats-js": "^1.0.1",
-    "three": "^0.104.0",
+    "three": "^0.125.0",
     "three-orbitcontrols-ts": "^0.1.2",
     "three-ply-loader": "^1.0.0",
     "three-ply-loader-ts": "^1.0.3",
